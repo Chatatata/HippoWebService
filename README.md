@@ -32,7 +32,7 @@ Just copy the entire repository, and run it with instructions supplied at the bo
 
 **A little help may rise us to skies!**
 
-Hippo app uses Node.js v5.1.0 (stable) as platform.
+Hippo app uses Node.js v5.1.0 (stable) as platform. Hippo app currently has no issues with [nvm].
 
 Run the app with:
 ```sh
@@ -66,5 +66,7 @@ MIT
    [node.js]: <http://nodejs.org>
    [hapi.js]: <https://github.com/hapijs/hapi>
    [async]: <https://github.com/caolan/async#parallel>
-   
-   
+   [nvm]: <https://www.npmjs.com/package/nvm>
+
+
+ 
