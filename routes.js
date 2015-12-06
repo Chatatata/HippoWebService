@@ -46,10 +46,6 @@
             reporter: require('good-console'),
             events: { log: '*', response: '*' }
         }, {
-            reporter: require('good-file'),
-            events: { ops: '*' },
-            config: './test/fixtures/awesome_log'
-        }, {
             reporter: 'good-http',
             events: { error: '*' },
             config: {
