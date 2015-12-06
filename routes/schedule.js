@@ -20,10 +20,11 @@
             
             Sync.get(request.params.string, function (err, data) {
                 if (err) {
-                    reply(err);
+//                    reply(err)
+                    console.log(err)
                 } 
                 else {
-                    reply(data);
+                    reply(data)
                 }
             })
         }
