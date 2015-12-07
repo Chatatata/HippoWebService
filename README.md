@@ -32,9 +32,7 @@ Just copy the entire repository, and run it with instructions supplied at the bo
 
 Hippo app uses Node.js v5.1.0 (stable) as platform. Hippo app currently has no issues with [nvm].
 
-You can start Hippo with three storage options. These are [MongoDB], [DynamoDB] and an SQL database supported by [Sequelize.js]
-
-Run the app with:
+Run the app with (assuming you have a MongoDB server):
 ```sh
 $ node . --db mongodb://localhost:27017/hippo
 ```
