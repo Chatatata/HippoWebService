@@ -11,9 +11,11 @@
 //
 //  'use strict'; over the project due to ES6-dependent architecture!
 
-'use strict'                                   //  ES6
+'use strict'                                        //  ES6
 
-var VERSION     = "1.1.4"
+var package     = require('./package.json')         //  Package info
+
+var VERSION     = package.version
 
 console.log('hippohttpd (v. ' + VERSION + ')\nType \'help\' to see help.\n')
 
