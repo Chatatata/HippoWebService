@@ -1,6 +1,6 @@
 (function () {
-    var  request     = require('request')                             //  Requests lib
-     ,   now         = require('performance-now')                     //  Benchmarking, performance measuring
+    var request     = require('request')                             //  Requests lib
+     ,  now         = require('performance-now')                     //  Benchmarking, performance measuring
      ,  Iconv       = require('iconv').Iconv                          //  CP1254 decoder
      ,  moment      = require('moment')                               //  Timing classes, moment.js
      ,  htmlparser  = require('htmlparser2')                          //  HTML parser
@@ -95,11 +95,11 @@
                                 if (order == 0) {
                                     assert.equal(text.length, 5)
                                     //  CRN
-                                    sectionObject.crn = text;
+                                    sectionObject.crn = parseInt(text);
                                 } else if (order == 1) {
                                     //  Course code in format %'BLG' %212 %true
                                     sectionObject.code = text.substring(0, 3)
-                                    sectionObject.number = text.substring(4, 7)
+                                    sectionObject.number = parseInt(text.substring(4, 7))
                                     sectionObject.isEnglish = text.charAt(7) == 'E'
                                 } else if (order == 2) {
                                     //  Title
@@ -109,11 +109,7 @@
                                     sectionObject.instructor = text
                                 } else if (order == 4) {
                                     //  Building codes
-                                    sectionObject.buildingCodes = []
-
-                                    text.split(' ').map(function (value) {
-                                        sectionObject.buildingCodes.push(value)
-                                    })
+                                    sectionObject.buildingCodes = text.split(' ')
                                 } else if (order == 5) {
                                     //  Weekday
                                     try {
@@ -132,10 +128,10 @@
                                     sectionObject.rooms = text.split(' ')
                                 } else if (order == 8) {
                                     //  Capacity
-                                    sectionObject.capacity = text
+                                    sectionObject.capacity = parseInt(text)
                                 } else if (order == 9) {
                                     //  Enrolled
-                                    sectionObject.enrolled = text
+                                    sectionObject.enrolled = parseInt(text)
                                 } else if (order == 10) {
                                     //  Reservation
                                     if (text === 'Yok/None') {
@@ -226,6 +222,16 @@
                 }
             }
         });
+    }
+
+    module.exports.parseIdentifier = function (text) {
+        var courseObject = {}
+
+        courseObject.code = text.substring(0, 3)
+        courseObject.number = parseInt(text.substring(4, 7))
+        courseObject.isEnglish = text.charAt(7) == 'E'
+
+        return courseObject
     }
 }())
 
