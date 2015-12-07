@@ -110,11 +110,11 @@
     }
 
     module.exports.get = function(crn, callback) {
-        db.collection('RawSections').findOne({ crn: crn }, callback)
+        db.collection('RawSections').find({ crn: parseInt(crn) }).limit(1).toArray(callback)
     }
 
     module.exports.find = function (json, callback) {
-        db.collection.find(JSON.parse(json)).toArray(callback)
+        db.collection.find(json).toArray(callback)
     }
 
     module.exports.resolveString = function (string, callback) {

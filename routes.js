@@ -26,7 +26,6 @@
                         reply({ error: 'RawSection with crn \'' + request.params.crn + '\' not found'})
                     }
                 } else {
-                    console.error(err)
                     reply(err)
                 }
             })
@@ -36,13 +35,13 @@
             method: 'GET',
             path: '/schedule/{crn}',
             handler: function (request, reply) {
-                Sync.get(request.params.crn, function (err, results) {
+                Sync.get(parseInt(request.params.crn), function (err, results) {
                     if (!err) {
-                        if (results) {
+                        if (results.length) {
                             reply(results)
                         } else {
                             reply({
-                                Error: 'RawSection with course reference number (CRN) \'' + request.query.string + '\' could not be found.',
+                                Error: 'RawSection with course reference number (CRN) \'' + request.params.crn + '\' could not be found.',
                                 Description: null,
                             })
                         }
@@ -59,10 +58,6 @@
             path: '/schedule',
             handler: function (request, reply) {
                 var isArgumentsValid = (request.query.string !== undefined || request.query.identifier !== undefined) && !(request.query.string !== undefined && request.query.identifier !== undefined)
-
-                console.log(isArgumentsValid)
-                console.log(request.query.string)
-                console.log(request.query.identifier)
 
                 if (isArgumentsValid && request.query.string !== undefined) {
                     Sync.resolveString(request.query.string, function (err, results) {
