@@ -13,7 +13,7 @@
 
 'use strict'                                   //  ES6
 
-var VERSION     = "1.1.0"
+var VERSION     = "1.1.4"
 
 console.log('hippohttpd (v. ' + VERSION + ')\nType \'help\' to see help.\n')
 
