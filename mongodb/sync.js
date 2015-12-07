@@ -19,7 +19,7 @@
      ,  scheduler   = require('node-schedule')                       //  date-based scheduling
      ,  async       = require('async')                               //  async helper library
      ,  MongoClient = require('mongodb').MongoClient                 //  MongoDB driver
-     ,  db = null
+     ,  db          = null
 //     ,  Analytics   = require('../analytics')
      ,  Parser      = require('./parser')
 
@@ -37,7 +37,8 @@
             if (err) console.error('Could not connect to the server')
             else {
                 console.log('Successfully connected to '.warn + url)
-                db = database
+                module.exports.db = database
+                db = module.exports.db
             }
         })
     }
@@ -115,21 +116,6 @@
 
     module.exports.find = function (json, callback) {
         db.collection.find(json).toArray(callback)
-    }
-
-    module.exports.resolveString = function (string, callback) {
-        db.collection('RawSections').createIndex({ title: 'text', instructor: 'text' }, function (err, result) {
-            if (err) callback(err)
-            else {
-                db.collection('RawSections').find({ $text: { $search: string } }).toArray(callback)
-            }
-        })
-    }
-
-    module.exports.resolveIdentifier = function (string, callback) {
-        var courseObject = Parser.parseIdentifier(string)
-
-        db.collection('RawSections').find({ code: courseObject.code, number: courseObject.number, isEnglish: courseObject.isEnglish }).toArray(callback)
     }
 
     function addRows(string, callback) {
