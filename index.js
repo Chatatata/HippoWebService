@@ -25,30 +25,12 @@ var argv        = require('yargs').argv             //	Run argument vector parse
 
 //var Enrollment = require('./enrollment');         //  Root server account manager subroutine
 
-var Analytics   = require('./analytics');           //  Analytics
+//var Analytics   = require('./analytics');           //  Analytics
 var Util        = require('./utility');             //  Utilities
 
-var Sync, Elephant
 
-if (argv.mongodb) {
-    console.log('Database option ' + '\'mongodb\''.info + ' selected')
-    Sync = require('./mongodb/sync')
-    Sync.init(argv.mongodb)
-} else if (argv.sql) {
-    console.log('Database option ' + '\'sql\''.info + ' selected')
-    Sync = require('./sql/sync')               //  Root server schedule synchronization subroutine, Sequelize.js kernel
-    Elephant = require('./sql/elephant')       //  ORM assistant
-} else if (argv.dynamodb) {
-    console.log('Database option ' + '\'dynamodb\''.info + ' selected')
-    Sync = require('./dynamodb/sync')          //  Root server schedule synchronization subroutine, AWS DynamoDB kernel
-} else {
-    console.log('usage:     node . --mongodb <url>           or')
-    console.log('           node . --dynamodb                or')
-    console.log('           node . --sql     <port number>   or')
-    console.log('fatal:     no database option given')
-
-    process.exit()
-}
+var Sync = require('./mongodb/sync')
+Sync.init(argv.db)
 
 //  Debug trigger
 var debug = true;
@@ -63,15 +45,6 @@ process.stdin.on('readable', function() {
         var argv = chunk.split(' ');
 
         switch (argv[0].trim()) {
-            case 'build':
-                Sync.build(function (err, result) {
-                    if (err) console.error(err)
-                    else if (debug) console.log(result)
-
-                    if (!err) Util.log('Successfully built.')
-                })
-                break
-
             case 'destroy':
                 Sync.destroy(function (err, result) {
                     if (err) console.error(err);
@@ -87,11 +60,13 @@ process.stdin.on('readable', function() {
                     else Util.log('Successfully renewed.')
                 })
                 break
+
             case 'pull':
                 Sync.pull(argv[1].trim(), function (err, results) {
                     if (err) console.error(err)
                     else Util.log(results)
                 })
+                break
 
             case 'stats':
                 Sync.stats();
@@ -105,7 +80,7 @@ process.stdin.on('readable', function() {
                 break
 
             case 'find':
-                Sync.query(argv[1].trim(), function (err, results) {
+                Sync.find(argv[1].trim(), function (err, results) {
                     if (err) console.error(err)
                     else {
                         console.log(results)
@@ -162,6 +137,9 @@ process.stdin.on('readable', function() {
             case 'quit':
                 process.exit()
                 break
+
+            default:
+                console.log('Unrecognized operation.')
         }
     }
 });

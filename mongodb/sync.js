@@ -11,14 +11,6 @@
 (function () {
     'use strict'
 
-    //  qtime()
-    //
-    //  Logs the server's next temporary downtime dates.
-
-    module.exports.qtime = function() {
-        qtime();
-    }
-
     var os          = require('os')                                  //  OS-layer functions
      ,  fs          = require('fs')                                  //  File system
      ,  request     = require('request')                             //  Requests lib
@@ -28,16 +20,8 @@
      ,  async       = require('async')                               //  async helper library
      ,  MongoClient = require('mongodb').MongoClient                 //  MongoDB driver
      ,  db = null
-     ,  Analytics   = require('../analytics')
+//     ,  Analytics   = require('../analytics')
      ,  Parser      = require('./parser')
-
-    Analytics.commitRule = function (slice, callback) {
-        var AWSRequestParams = {
-            RequestItems: {
-                Stats: slice,
-            },
-        }
-    }
 
     var buildings   = require('../static/Buildings');             //  Load static data
     var courseCodes = require('../static/CourseCodes');
@@ -48,7 +32,7 @@
     //  NoSQL table build-up
     //
 
-    module.exports.init = function (url, callback) {
+    module.exports.init = function (url) {
         MongoClient.connect(url, function (err, database) {
             if (err) console.error('Could not connect to the server')
             else {
@@ -74,8 +58,11 @@
             Sections: function (callback) {
                 db.createCollection('RawSections', callback)
             },
-            SectionsCreateIndex: function (callback) {
-                db.collection('RawSections').createIndex('crn', callback)
+            CRNIndex: function (callback) {
+                db.collection('RawSections').createIndex({ crn: 1 }, { unique: true }, callback)
+            },
+            TextIndex: function (callback) {
+                callback()
             },
             Analytics: function (callback) {
                 db.createCollection('Analytics', callback)
@@ -88,7 +75,17 @@
     }
 
     module.exports.pull = function (string, callback) {
-        throw Error('Not implemented')
+        var isArgumentsValid = typeof string === 'string' && typeof callback === 'function'
+
+        if (isArgumentsValid) {
+            if (string === 'all') {
+                return async.each(courseCodes, updateRows, callback)
+            } else if (isCourseCode(string)) {
+                return updateRows(string, callback)
+            }
+        }
+
+        throw Error('Invalid arguments')
     }
 
     module.exports.count = function(callback) {
@@ -118,6 +115,21 @@
 
     module.exports.find = function (json, callback) {
         db.collection.find(JSON.parse(json)).toArray(callback)
+    }
+
+    module.exports.resolveString = function (string, callback) {
+        db.collection('RawSections').createIndex({ title: 'text', instructor: 'text' }, function (err, result) {
+            if (err) callback(err)
+            else {
+                db.collection('RawSections').find({ $text: { $search: string } }).toArray(callback)
+            }
+        })
+    }
+
+    module.exports.resolveIdentifier = function (string, callback) {
+        var courseObject = Parser.parseIdentifier(string)
+
+        db.collection('RawSections').find({ code: courseObject.code, number: courseObject.number, isEnglish: courseObject.isEnglish }).toArray(callback)
     }
 
     function addRows(string, callback) {
@@ -157,12 +169,12 @@
 
     function isCourseCode(string) {
         for (var eachCode of courseCodes) {
-            if (eachCode == string) {
-                return true;
+            if (eachCode === string) {
+                return true
             }
         }
 
-        return false;
+        return false
     }
 
     //
