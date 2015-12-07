@@ -6,7 +6,7 @@
 //    @description: Root server synchronization handler, based on Sequelize.js ORM with SQL dialect Postgres maintained
 
 (function () {
-    "use strict"
+    'use strict'
 
     //  Encapsulation
 
@@ -65,21 +65,21 @@
 
     module.exports.debug = debug;
     
-    var http = require("http");                                     //  HTTP requests
-    var request = require("request");
-    var moment = require("moment");                                 //  Timing classes, moment.js
-    var htmlparser = require("htmlparser2");                        //  HTML parser
-    var Iconv = require("iconv").Iconv;                             //  CP1254 decoder
-    var now = require("performance-now");                           //  Benchmarking, performance measuring
-    var scheduler = require("node-schedule");                       //  date-based scheduling
+    var http = require('http');                                     //  HTTP requests
+    var request = require('request');
+    var moment = require('moment');                                 //  Timing classes, moment.js
+    var htmlparser = require('htmlparser2');                        //  HTML parser
+    var Iconv = require('iconv').Iconv;                             //  CP1254 decoder
+    var now = require('performance-now');                           //  Benchmarking, performance measuring
+    var scheduler = require('node-schedule');                       //  date-based scheduling
     var assert = require('assert');                                 //  C type assertion test
-    var Q = require("q");                                           //  kriskowal/Q's Promises/A+ implementation
+    var Q = require('q');                                           //  kriskowal/Q's Promises/A+ implementation
 
-    var buildings = require("./static/Buildings.json");             //  Load static data
-    var courseCodes = require("./static/CourseCodes.json");
+    var buildings = require('./static/Buildings.json');             //  Load static data
+    var courseCodes = require('./static/CourseCodes.json');
 
-    var Elephant = require("./elephant");
-    var Util = require("./utility");
+    var Elephant = require('./elephant');
+    var Util = require('./utility');
 
     var updating = false;
     var debug = false;
@@ -96,7 +96,7 @@
             return Elephant.build();
         })
         .then(function () {
-            return Elephant.Schedule().create({ name: "201503", validUntil: new Date() })
+            return Elephant.Schedule().create({ name: '201503', validUntil: new Date() })
         })
         .then(function (schedule) {
             currentSchedule = schedule;
@@ -120,23 +120,23 @@
         })
         .then(function () {
             if(firstTime.diff(moment()) <= 45000) {
-                return Q.reject(Error("Time difference is lower than expected. Please recall renew after a minute."));
+                return Q.reject(Error('Time difference is lower than expected. Please recall renew after a minute.'));
             } else if (jobs.length != courseCodes.length) {
-                return Q.reject(Error("Scheduling subsystem inconsistency, panic: " + jobs.length + " jobs, " + courseCodes.length + " expected."));
+                return Q.reject(Error('Scheduling subsystem inconsistency, panic: ' + jobs.length + ' jobs, ' + courseCodes.length + ' expected.'));
             } else return Q.resolve();
         })
         .then(function () {
             syncStats.push(now() - startTime);
         })
         .then(function () {
-            console.log(new Date() + ": Renew completed. Schedulers are set, database is now in sync.")
+            console.log(new Date() + ': Renew completed. Schedulers are set, database is now in sync.')
         });
     }
     
     function fpartial(string) {
         return updateCode(string)
         .then(function (results) {
-            console.log(new Date() + ": " + string + " is successfully fetched.");
+            console.log(new Date() + ': ' + string + ' is successfully fetched.');
         })
         .catch(function (err) {
             console.error(err);
@@ -178,7 +178,7 @@
         .catch(function (error) {
             console.error(row + error);
             
-            return Q.reject(Error("CourseFindError"));
+            return Q.reject(Error('CourseFindError'));
         })
         .then(function (course) {
             //  Add section to the course
@@ -189,7 +189,7 @@
         .catch(function (error) {
             console.error(row + error);
             
-            return Q.reject(Error("CourseCreateError"));
+            return Q.reject(Error('CourseCreateError'));
         })
         .then(function (section) {
             var buildingIds = [];
@@ -212,7 +212,7 @@
         .catch(function (error) {
             console.error(row + error);
             
-            return Q.reject(Error("SectionCreateError"));
+            return Q.reject(Error('SectionCreateError'));
         })
         .then(function (buildingIds) {
             var promises = [];
@@ -239,12 +239,12 @@
         .catch(function (error) {
             console.error(error);
             
-            return Q.reject(Error("LessonCreateError"));
+            return Q.reject(Error('LessonCreateError'));
         })
     }
     
     function updateCode(string) {
-        if (string === "-all") {
+        if (string === '-all') {
             return Q.all(courseCodes.map(function (value) {
                 return fpartial(value);
             }));
@@ -273,13 +273,13 @@
 
     function qtime() {
         if (firstTime != null && lastTime != null) {
-            console.log("[MAINTENANCE: offTime: '" + firstTime.format("hh:mm:ss a") + "' onTime: '" + lastTime.format("hh:mm:ss a") + "']");
+            console.log('[MAINTENANCE: offTime: '' + firstTime.format('hh:mm:ss a') + '' onTime: '' + lastTime.format('hh:mm:ss a') + '']');
             
             jobs.forEach(function (element, index, array) {
                 console.log(element);
             });
         }
-        else console.log("[MAINTENANCE: No task scheduled.]");
+        else console.log('[MAINTENANCE: No task scheduled.]');
     }
 
     function query() {
@@ -295,53 +295,53 @@
             var totalElapsed = 0;
 
             for (var i = 0; i < syncStats.length; ++i) {
-                console.log((i + 1) + ". performed in " + syncStats[i].toFixed(2) + " seconds.");
+                console.log((i + 1) + '. performed in ' + syncStats[i].toFixed(2) + ' seconds.');
                 totalElapsed += syncStats[i];
             }
 
-            console.log("- Total elapsed: " + totalElapsed.toFixed(2) + " seconds.");
+            console.log('- Total elapsed: ' + totalElapsed.toFixed(2) + ' seconds.');
         } else {
-            console.log("No syncs made until now.");
+            console.log('No syncs made until now.');
         }
     }
 
     function fetch(string) {
         var deferred = Q.defer();
         //  Make HTTP request to get HTML data
-        request({ url: "http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php", qs: { "fb": string }, encoding: null }, function (error, response, body) {
+        request({ url: 'http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php', qs: { 'fb': string }, encoding: null }, function (error, response, body) {
             if (error) {
                 return fetch(string);
-                console.log(string + " with error " + error + ". Retrying...");
+                console.log(string + ' with error ' + error + '. Retrying...');
             } else {
                 if (debug) {
-                    console.log("Fetching: " + string);
+                    console.log('Fetching: ' + string);
                 }
-                const iconv = new Iconv("CP1254", "UTF-8");
+                const iconv = new Iconv('CP1254', 'UTF-8');
                 const data = iconv.convert(body);
                 const dataString = data.toString();
 
                 //  Parse date
-                var trimmedDateString = dataString.substring(dataString.search("</b>") + 4, dataString.length);
-                trimmedDateString = trimmedDateString.substring(0, trimmedDateString.search(" \t\r\n"));
-                const date = moment(trimmedDateString, "DD-MM-yyyy / H:mm:ss");
-                date.add(15, "m");
-                date.add(3, "s");
+                var trimmedDateString = dataString.substring(dataString.search('</b>') + 4, dataString.length);
+                trimmedDateString = trimmedDateString.substring(0, trimmedDateString.search(' \t\r\n'));
+                const date = moment(trimmedDateString, 'DD-MM-yyyy / H:mm:ss');
+                date.add(15, 'm');
+                date.add(3, 's');
 
                 //  Parse courses
-                const firstRange = dataString.search("<table  class=dersprg>");
+                const firstRange = dataString.search('<table  class=dersprg>');
                 var trimmedString = dataString.substring(firstRange, dataString.length);
-                const secondRange = trimmedString.search("</table>");
+                const secondRange = trimmedString.search('</table>');
                 trimmedString = trimmedString.substring(0, secondRange + 8);
 
-                var searchValue = trimmedString.search("<br>");
+                var searchValue = trimmedString.search('<br>');
 
-                while (trimmedString.search("<br>") != -1) {
-                    var searchValue = trimmedString.search("<br>");
+                while (trimmedString.search('<br>') != -1) {
+                    var searchValue = trimmedString.search('<br>');
 
-                    trimmedString = trimmedString.substring(0, searchValue) + " " + trimmedString.substring(searchValue + 4, trimmedString.length);
+                    trimmedString = trimmedString.substring(0, searchValue) + ' ' + trimmedString.substring(searchValue + 4, trimmedString.length);
                 }
 
-                trimmedString = trimmedString.split("");
+                trimmedString = trimmedString.split('');
 
                 for (var i = 0; i < trimmedString.length; i++) {
                     if (trimmedString[i] == '&') {
@@ -349,7 +349,7 @@
                     }
                 }
 
-                trimmedString = trimmedString.join("");
+                trimmedString = trimmedString.join('');
 
                 var outerArray = [];
                 var innerArray = [];
@@ -381,9 +381,9 @@
                     ontext: function (text) {
                         ++counter;
 
-                        if (counter >= 31 && text != " ") {
-                            while(text.search("  ") != -1) {
-                                var searchValue = text.search("  ");
+                        if (counter >= 31 && text != ' ') {
+                            while(text.search('  ') != -1) {
+                                var searchValue = text.search('  ');
 
                                 text = text.substring(0, searchValue) + text.substring(searchValue + 1, text.length);
                             }
@@ -398,19 +398,19 @@
                                 //  Course code in format %'BLG' %212 %true
                                 innerArray.push(text.substring(0, 3));
                                 innerArray.push(parseInt(text.substring(4, 7)));
-                                innerArray.push(text.charAt(7) == "E");
+                                innerArray.push(text.charAt(7) == 'E');
                             } else if (order == 2 || order == 3) {
                                 //  Title and instructor name(s)
                                 innerArray.push(text);
                             } else if (order == 4) {
                                 //  Building codes
-                                innerArray.push(text.split(" "));
+                                innerArray.push(text.split(' '));
                             } else if (order == 5) {
                                 //  Weekday
                                 try {
-                                    var weekdays = weekday(text.split(" "));
+                                    var weekdays = weekday(text.split(' '));
                                 } catch (err) {
-                                    console.error(err + ", coursespace: " + string + ", crn:" + innerArray[0]);
+                                    console.error(err + ', coursespace: ' + string + ', crn:' + innerArray[0]);
                                 } finally {
                                     innerArray.push(weekdays);
                                 }
@@ -420,45 +420,45 @@
                                 innerArray.push(text);
                             } else if (order == 7) {
                                 //  Room nr.s
-                                innerArray.push(text.split(" "));
+                                innerArray.push(text.split(' '));
                             } else if (order == 8 || order == 9) {
                                 //  Capacity, enrolled
                                 innerArray.push(parseInt(text));
                             } else if (order == 10) {
                                 //  Reservation
-                                if (text === "Yok/None") {
+                                if (text === 'Yok/None') {
                                     innerArray.push(null);
                                 } else {
                                     innerArray.push(text);
                                 }
                             } else if (order == 11) {
                                 //  Major restrictions
-                                if (text === "Yok/None") {
+                                if (text === 'Yok/None') {
                                     innerArray.push(null);
                                 } else {
-                                    innerArray.push(text.split(", "));
+                                    innerArray.push(text.split(', '));
                                 }
                             } else if (order == 12) {
                                 //  Prerequisites
-                                if (text === "Yok/None") {
+                                if (text === 'Yok/None') {
                                     innerArray.push(null);
                                 } else {
                                     innerArray.push(text);
                                 }
                             } else if (order == 13) {
                                 //  Class restriction
-                                if (text === "Diğer Şartlar") {
+                                if (text === 'Diğer Şartlar') {
                                     return;
-                                } else if (text === "Yok/None") {
+                                } else if (text === 'Yok/None') {
                                     innerArray.push(false);
-                                } else if (text === "4.Sınıf") {
+                                } else if (text === '4.Sınıf') {
                                     innerArray.push(4);
                                 } else {
-                                    var arr = text.split(", ");
+                                    var arr = text.split(', ');
                                     
                                     for (var i = 0; i < arr.length; ++i) {
-                                        if (arr[i] !== "4.Sınıf" && arr[i] !== "3.Sınıf" && arr[i] !== "2.Sınıf" && arr[i] !== "1.Sınıf") {
-                                            throw Error("Inconsistent class restriction string part: \"" + arr[i] + "\"");
+                                        if (arr[i] !== '4.Sınıf' && arr[i] !== '3.Sınıf' && arr[i] !== '2.Sınıf' && arr[i] !== '1.Sınıf') {
+                                            throw Error('Inconsistent class restriction string part: \'' + arr[i] + '\'');
                                         }
                                         
                                         arr[i] = arr[i].charAt(0);
@@ -495,9 +495,9 @@
                 if (debug) {
                     var endTime = now();
                     if (updating) {
-                        console.log(string + " updated in " + (endTime - startTime).toFixed(2) + " msecs and will be renewed in " + date.diff(moment()) / (1000 * 60));
+                        console.log(string + ' updated in ' + (endTime - startTime).toFixed(2) + ' msecs and will be renewed in ' + date.diff(moment()) / (1000 * 60));
                     } else {
-                        console.log(fetchedCourses++ + "/" + courseCodes.length + ": " + string + " added in " + (endTime - startTime).toFixed(2) + " msecs and will be renewed in " + date.diff(moment()) / (1000 * 60));
+                        console.log(fetchedCourses++ + '/' + courseCodes.length + ': ' + string + ' added in ' + (endTime - startTime).toFixed(2) + ' msecs and will be renewed in ' + date.diff(moment()) / (1000 * 60));
                     }
                 }
                 
@@ -505,7 +505,7 @@
                 
                 var just = new Date()
                 if (date - just <= 0) {
-                    throw date + " is before than " + just;
+                    throw date + ' is before than ' + just;
                 }
 
                 deferred.resolve(outerArray);
@@ -526,31 +526,31 @@
     }
     
     function weekday(input) {
-        if (Object.prototype.toString.call(input) !== "[object Array]") {
-            throw Error("Input is not string array: " + input.constructor);
+        if (Object.prototype.toString.call(input) !== '[object Array]') {
+            throw Error('Input is not string array: ' + input.constructor);
         }
         
         var result = [];
         
         for (var i = 0; i < input.length; ++i) {
-            if (input[i] === "Pazartesi") {
+            if (input[i] === 'Pazartesi') {
                 result.push(0);
-            } else if (input[i] === "Salı") {
+            } else if (input[i] === 'Salı') {
                 result.push(1);
-            } else if (input[i] === "Çarşamba") {
+            } else if (input[i] === 'Çarşamba') {
                 result.push(2);
-            } else if (input[i] === "Perşembe") {
+            } else if (input[i] === 'Perşembe') {
                 result.push(3);
-            } else if (input[i] === "Cuma") {
+            } else if (input[i] === 'Cuma') {
                 result.push(4);
-            } else if (input[i] === "Cumartesi") {
+            } else if (input[i] === 'Cumartesi') {
                 result.push(5);
-            } else if (input[i] === "Pazar") {
+            } else if (input[i] === 'Pazar') {
                 result.push(6);
-            } else if (input[i] === "----") {
+            } else if (input[i] === '----') {
                 result.push(7);
             } else {
-                throw Error("Raw value could not be converted to Weekday enum value. \"" + input[i] + "\"");
+                throw Error('Raw value could not be converted to Weekday enum value. \'' + input[i] + '\'');
                 result.push(-1);
             }
         }
@@ -574,7 +574,7 @@
     
     function _test_fetch() {
         var keyframe = now();
-        console.log(new Date() + ": HTTP request benchmark started.");
+        console.log(new Date() + ': HTTP request benchmark started.');
         
         return Q.all(courseCodes.map(_test_request))
         .then(function (results) {
@@ -593,14 +593,14 @@
     function _test_fetchP() {
         return module.exports._test_fetch()
         .then(function (result) {
-            console.log(new Date() + ": HTTP request benchmark completed, " + result.totalBytes + " bytes read in " + result.totalElapsed.toFixed(0) / 1000 + " seconds (avg. " + ((result.totalBytes / 1000) / result.totalElapsed).toFixed(4) + " MB/s).");
+            console.log(new Date() + ': HTTP request benchmark completed, ' + result.totalBytes + ' bytes read in ' + result.totalElapsed.toFixed(0) / 1000 + ' seconds (avg. ' + ((result.totalBytes / 1000) / result.totalElapsed).toFixed(4) + ' MB/s).');
         });
     }
             
     function _test_request(string) {
         var deferred = Q.defer();
         
-        request({ url: "http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php", qs: { "fb": string }, encoding: null }, function (error, response, body) {
+        request({ url: 'http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php', qs: { 'fb': string }, encoding: null }, function (error, response, body) {
             if (error) {
                 return _test_request(string);
             } else {

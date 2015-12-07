@@ -6,72 +6,48 @@
 //	@description: Main routes controller
 
 (function () {
-    "use strict"
-    
-    module.exports.server = function () {
-        return server;
-    }
-    
-    var Hapi = require("hapi");
-    
-    var server = new Hapi.Server();
-    
-    server.connection({ port: 3000 });
-    
-//    server.route({
-//        method: "GET",
-//        path: "/",
-//        handler: function (request, reply) {
-//            reply("Hello, world!");
-//        }
-//    });
+    'use strict'
 
-    server.route({
-        method: "GET",
-        path: "/{name}",
-        handler: function (request, reply) {
-            reply("Hello, " + encodeURIComponent(request.params.name) + "!");
+    module.exports.start = function (port) {
+        var Hapi = require('hapi')
+
+        var server = new Hapi.Server()
+
+        module.exports.add = function (route) {
+            server.route(route)
         }
-    });
-    
-    //  Add external routes
-    
-    require("./routes/schedule.js").routes.forEach(function (element, index, array) {
-        server.route(element);
-    });
-    
-    var options = {
-        opsInterval: 1000,
-        reporters: [{
-            reporter: require('good-console'),
-            events: { log: '*', response: '*' }
-        }, {
-            reporter: 'good-http',
-            events: { error: '*' },
-            config: {
-                endpoint: 'http://prod.logs:3000',
-                wreck: {
-                    headers: { 'x-api-key' : 12345 }
+
+        var options = {
+            opsInterval: 1000,
+            reporters: [{
+                reporter: require('good-console'),
+                events: { log: '*', response: '*' }
+            }, {
+                reporter: 'good-http',
+                events: { error: '*' },
+                config: {
+                    endpoint: 'http://prod.logs:3000',
+                    wreck: {
+                        headers: { 'x-api-key' : 12345 }
+                    },
                 },
-            },
-        }],
-    };
+            }],
+        }
     
-    module.exports.start = function () {
-        return server.register({
+        server.connection({ port: port ? port:3000 })
+
+        server.register({
             register: require('good'),
             options: options
         }, function (err) {
             if (err) {
-                console.error(err);
+                console.error(err)
             }
             else {
                 server.start(function () {
-
-                    console.info('Server started at ' + server.info.uri);
-                });
+                    console.info('Server started at '.warn + server.info.uri + '.'.warn)
+                })
             }
-        });
+        })
     }
-    
-}());
+}())

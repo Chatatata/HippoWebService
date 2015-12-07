@@ -9,38 +9,22 @@
 //      DynamoDB, raw.
 
 (function () {
-    "use strict"
-
-    //  qtime()
-    //
-    //  Logs the server's next temporary downtime dates.
-
-    module.exports.qtime = function() {
-        return qtime();
-    }
-
-    //  stats()
-    //
-    //  Logs the statistics of all subroutines executed in past.
-
-    module.exports.stats = function() {
-        return stats();
-    }
+    'use strict'
     
-    var os          = require("os")                                  //  OS-layer functions
-     ,  fs          = require("fs")                                  //  File system
-     ,  http        = require("http")                                //  HTTP requests
-     ,  request     = require("request")                             //  Requests lib
-     ,  uuid        = require("uuid")                                //  Rigorous implementation of RFC4122 (v1 and v4) UUIDs
-     ,  moment      = require("moment")                              //  Timing classes, moment.js
-     ,  htmlparser  = require("htmlparser2")                         //  HTML parser
-     ,  Iconv       = require("iconv").Iconv                         //  CP1254 decoder
-     ,  now         = require("performance-now")                     //  Benchmarking, performance measuring
-     ,  scheduler   = require("node-schedule")                       //  date-based scheduling
+    var os          = require('os')                                  //  OS-layer functions
+     ,  fs          = require('fs')                                  //  File system
+     ,  http        = require('http')                                //  HTTP requests
+     ,  request     = require('request')                             //  Requests lib
+     ,  uuid        = require('uuid')                                //  Rigorous implementation of RFC4122 (v1 and v4) UUIDs
+     ,  moment      = require('moment')                              //  Timing classes, moment.js
+     ,  htmlparser  = require('htmlparser2')                         //  HTML parser
+     ,  Iconv       = require('iconv').Iconv                         //  CP1254 decoder
+     ,  now         = require('performance-now')                     //  Benchmarking, performance measuring
+     ,  scheduler   = require('node-schedule')                       //  date-based scheduling
      ,  assert      = require('assert')                              //  C type assertion test
-     ,  async       = require("async")                               //  async helper library
-     ,  AWS         = require("aws-sdk")                             //  Amazon Web Services node-js sdk
-     ,  Analytics   = require('analytics')
+     ,  async       = require('async')                               //  async helper library
+     ,  AWS         = require('aws-sdk')                             //  Amazon Web Services node-js sdk
+     ,  Analytics   = require('../analytics')
 
     Analytics.commitRule = function (slice, callback) {
         var AWSRequestParams = {
@@ -48,20 +32,18 @@
                 Stats: slice,
             },
         }
-
-        for ()
     }
     
     AWS.config.update({
         dynamoDbCrc32: false,
-        region: "eu-central-1",
+        region: 'eu-central-1',
         sslEnabled: true,
     });
         
     var dynamodb    = new AWS.DynamoDB({apiVersion: '2012-08-10'})
 
-    var buildings   = require("../static/Buildings");             //  Load static data
-    var courseCodes = require("../static/CourseCodes");
+    var buildings   = require('../static/Buildings');             //  Load static data
+    var courseCodes = require('../static/CourseCodes');
     
     var stopwatches = [];
     var stats       = [];
@@ -78,17 +60,17 @@
         async.series({
             RawSections: function (callback) {
                 var params = {
-                    TableName: "RawSections",
+                    TableName: 'RawSections',
                     KeySchema: [
                         {
-                            AttributeName: "crn",
-                            KeyType: "HASH" 
+                            AttributeName: 'crn',
+                            KeyType: 'HASH'
                         },
                     ],
                     AttributeDefinitions: [
                         {
-                            AttributeName: "crn",
-                            AttributeType: "N"
+                            AttributeName: 'crn',
+                            AttributeType: 'N'
                         },
                     ],
                     ProvisionedThroughput: {
@@ -129,7 +111,7 @@
     
     module.exports.destroy = function (callback) {
         var params = {
-            "TableName": "RawSections"
+            'TableName': 'RawSections'
         };
         
         dynamodb.deleteTable(params, callback);
@@ -141,19 +123,19 @@
         
             async.eachSeries(courseCodes, addRows, callback);
         } else if (arguments.length == 2) {
-            if (typeof arguments[0] !== "function") {
-                throw Error("Invalid arguments.");
+            if (typeof arguments[0] !== 'function') {
+                throw Error('Invalid arguments.');
             }
             
             return addRows(arguments[0], callback);
         } else {
-            return Error("Excessive number of arguments in function call.");
+            return Error('Excessive number of arguments in function call.');
         }
     }
     
     module.exports.count = function(callback) {
         var params = {
-            TableName: "RawSections",
+            TableName: 'RawSections',
         };
         
         dynamodb.describeTable(params, callback);
@@ -165,18 +147,18 @@
     
     module.exports.get = function(crn, callback) {
         var params = {
-            TableName: "RawSections",
+            TableName: 'RawSections',
             Key: {
                 crn: {
-                    N: crn + "",
+                    N: crn + '',
                 },
             },
             AttributesToGet: [
-                "crn",
-                "title",
-                "instructor",
-                "capacity",
-                "enrolled",
+                'crn',
+                'title',
+                'instructor',
+                'capacity',
+                'enrolled',
             ],
         };
         
@@ -186,12 +168,12 @@
     var queue = []
 
     function addRows(string, callback) {
-        if (typeof string !== "string" || typeof callback !== "function") {
-            throw Error("Invalid arguments.")
+        if (typeof string !== 'string' || typeof callback !== 'function') {
+            throw Error('Invalid arguments.')
         }
         
         fetch(string, function (rows) {
-            console.log(string + ", fetched, now writing to db.")
+            console.log(string + ', fetched, now writing to db.')
             
             multipleBatchWrite(rows, 25, function (err) {
                 if (queue.length) {
@@ -232,7 +214,7 @@
         if (AWSRequestParams.RequestItems.RawSections.length) {
             dynamodb.batchWriteItem(AWSRequestParams, function (err, data) {
                 if (err) {
-                    if (err.code === "UnknownError") {
+                    if (err.code === 'UnknownError') {
                         queue.push(AWSRequestParams)
                     } else {
                         callback(err);
@@ -252,7 +234,7 @@
     
     function updateOne(row, callback) {
         var params = {
-            TableName: "RawSections",
+            TableName: 'RawSections',
             Key: {
                 crn: {
                     N: row.crn,
@@ -280,17 +262,6 @@
         });
     }
 
-    function qtime() {
-        if (firstTime != null && lastTime != null) {
-            console.log("[MAINTENANCE: offTime: '" + firstTime.format("hh:mm:ss a") + "' onTime: '" + lastTime.format("hh:mm:ss a") + "']");
-            
-            jobs.forEach(function (element, index, array) {
-                console.log(element);
-            });
-        }
-        else console.log("[MAINTENANCE: No task scheduled.]");
-    }
-
     function query() {
 
     }
@@ -300,13 +271,13 @@
             var totalElapsed = 0;
 
             for (var i = 0; i < syncStats.length; ++i) {
-                console.log((i + 1) + ". performed in " + syncStats[i].toFixed(2) + " seconds.");
+                console.log((i + 1) + '. performed in ' + syncStats[i].toFixed(2) + ' seconds.');
                 totalElapsed += syncStats[i];
             }
 
-            console.log("- Total elapsed: " + totalElapsed.toFixed(2) + " seconds.");
+            console.log('- Total elapsed: ' + totalElapsed.toFixed(2) + ' seconds.');
         } else {
-            console.log("No syncs made until now.");
+            console.log('No syncs made until now.');
         }
     }
 
@@ -335,7 +306,7 @@
         var sw = now();
         
         var httpRequest = function (string, callback) {     
-            request({ url: "http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php", qs: { "fb": string }, encoding: null }, function (error, response, body) {
+            request({ url: 'http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php', qs: { 'fb': string }, encoding: null }, function (error, response, body) {
                 if (error) {
                     return httpRequest(string, callback)
                 } else {
