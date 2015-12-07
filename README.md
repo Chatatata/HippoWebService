@@ -12,7 +12,7 @@ Hippo Web Service is the back-end support service for Hippo.
   - Some primitive benchmarking utilities in order to test the environment.
 
 ### Version
-1.1.0
+1.1.1
 
 ### Stack
 
@@ -21,10 +21,6 @@ Hippo uses following packages or applications, currently:
 * [node.js] - evented I/O for the backend
 * [hapi.js] - fast node.js network app framework
 * [async] - asynchronous control-flow library
-
-Also if you use its SQL adapter,
-
-* [Sequelize.js] - SQL ORM for Node.js
 
 > As I do not believe that promise implementations (i.e. Promises/A+, kriskowal's Q, bluebird etc.) are mature enough to be played with, I chose to write the code with callbacks.
 
@@ -40,22 +36,7 @@ You can start Hippo with three storage options. These are [MongoDB], [DynamoDB] 
 
 Run the app with:
 ```sh
-$ node . --mongodb mongodb://localhost:27017/hippo
-```
-
-You may also use Sequelize.js's SQL ORM for Node.js (not included), by adding `-sql` argument to the command line:
-```sh
-$ node . --sql postgres://localhost:5432
-```
-
-Also, if you have an AWS account, you may simply pass your key at `~/.aws/credentials` **(Unix)**,
-```sh
-$ node . --dynamodb
-```
-
-Or you may simply want to **verbose** debug output:
-```sh
-$ node <your database configuration> --debug
+$ node . --db mongodb://localhost:27017/hippo
 ```
 
 ### Todos
@@ -81,8 +62,6 @@ MIT
    [async]: <https://github.com/caolan/async#parallel>
    [nvm]: <https://www.npmjs.com/package/nvm>
    [MongoDB]: <https://www.mongodb.org>
-   [Sequelize.js]: <http://docs.sequelizejs.com/en/latest/>
-   [DynamoDB]: <http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html>
 
 
  
