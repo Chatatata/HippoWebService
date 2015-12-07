@@ -22,19 +22,15 @@
             method: 'GET',
             path: '/schedule/{crn}',
             handler: function (request, reply) {
-                Sync.get(parseInt(request.params.crn), function (err, results) {
-                    if (!err) {
-                        if (results.length) {
-                            reply(results[0])
-                        } else {
-                            reply({
-                                Error: 'RawSection with course reference number (CRN) \'' + request.params.crn + '\' could not be found.',
-                                Description: null,
-                            })
-                        }
+                Sync.db.collection('RawSections').find({ crn: parseInt(request.params.crn) }).limit(1).toArray(function (err, result) {
+                    if (err) reply(err)
+                    else if (result.length) {
+                        reply(result[0])
                     } else {
-                        console.error(err)
-                        reply(err)
+                        reply({
+                            Error: 'RawSection with course reference number (CRN) \'' + request.params.crn + '\' could not be found.',
+                            Description: null,
+                        })
                     }
                 })
             }
