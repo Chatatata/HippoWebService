@@ -6,7 +6,7 @@
 //    @description: Postgres database manager using Sequelize.js
 
 (function () {
-    "use strict"
+    'use strict'
 
     //  Encapsulation
 
@@ -21,7 +21,7 @@
     }
     
     module.exports.destroy = function() {
-        return pool.drop().then(function () { console.log(new Date() + ": Database dropped.") });
+        return pool.drop().then(function () { console.log(new Date() + ': Database dropped.') });
     }
     
     //  Models
@@ -45,10 +45,10 @@
     }
 
     //  kriskowal/Q's Promises/A+ implementation
-    var Q = require("q");
+    var Q = require('q');
     
     //  Postgres manager, Sequelize.js
-    var Sequelize = require("sequelize");
+    var Sequelize = require('sequelize');
 
     
     var pool = null;
@@ -56,11 +56,11 @@
 
     function build() {
         //  Resolve Sequelize.js pool
-        pool = new Sequelize("postgres://Instigater@localhost:5432/Instigater", { logging: false });
+        pool = new Sequelize('postgres://Instigater@localhost:5432/Instigater', { logging: false });
 
         //  Web content
         
-        Place = pool.define("place", {
+        Place = pool.define('place', {
             room: {
                 type: Sequelize.STRING,
             }
@@ -68,7 +68,7 @@
             freezeTableName: true
         });
         
-        Building = pool.define("building", {
+        Building = pool.define('building', {
             shortName: {
                 type: Sequelize.STRING,
             },
@@ -85,7 +85,7 @@
             freezeTableName: true // Model tableName will be the same as the model name
         });
 
-        Lesson = pool.define("lesson", {
+        Lesson = pool.define('lesson', {
             weekday: {
                 type: Sequelize.ARRAY(Sequelize.INTEGER),    //    will be changed to enum
             },
@@ -99,7 +99,7 @@
             freezeTableName: true // Model tableName will be the same as the model name
         });
 
-        Section = pool.define("section", {
+        Section = pool.define('section', {
             //    CRN is the identifier of a section
             crn: {
                 type: Sequelize.INTEGER,
@@ -127,7 +127,7 @@
             freezeTableName: true // Model tableName will be the same as the model name
         });
 
-        Course = pool.define("course", {
+        Course = pool.define('course', {
             code: {
                 type: Sequelize.STRING,
             },
@@ -149,12 +149,12 @@
             },
         }, {
             instanceMethods: {
-                textualRepresentation: function() { return this.code + " " + this.number + (this.isEnglish ? "E" : "") }
+                textualRepresentation: function() { return this.code + ' ' + this.number + (this.isEnglish ? 'E' : '') }
             },
             freezeTableName: true // Model tableName will be the same as the model name
         });
 
-        Schedule = pool.define("schedule", {
+        Schedule = pool.define('schedule', {
             name: {
                 type: Sequelize.STRING,
             },
@@ -167,7 +167,7 @@
         
         //  Accounts
         
-        Student = pool.define("student", {
+        Student = pool.define('student', {
             username: {
                 type: Sequelize.STRING,
                 allowNull: false,
@@ -241,31 +241,31 @@
 }());
 
 //AttributeDefinitions: [
-//    { AttributeName: "crn", AttributeType: "N" },
-//    { AttributeName: "code", AttributeType: "S" },
-//    { AttributeName: "number", AttributeType: "N" },
-//    { AttributeName: "isEnglish", AttributeType: "BOOL" },
-//    { AttributeName: "title", AttributeType: "S" },
-//    { AttributeName: "instructor", AttributeType: "S" },
-//    { AttributeName: "buildingCodes", AttributeType: "SS" },
-//    { AttributeName: "weekdays", AttributeType: "NS" },
-//    { AttributeName: "times", AttributeType: "S" },
-//    { AttributeName: "rooms", AttributeType: "SS" },
-//    { AttributeName: "capacity", AttributeType: "N" },
-//    { AttributeName: "enrolled", AttributeType: "N" },
-//    { AttributeName: "reservation", AttributeType: "S" },
-//    { AttributeName: "majorRestriction", AttributeType: "SS" },
-//    { AttributeName: "prerequisites", AttributeType: "S" },
-//    { AttributeName: "classRestriction", AttributeType: "N" },
+//    { AttributeName: 'crn', AttributeType: 'N' },
+//    { AttributeName: 'code', AttributeType: 'S' },
+//    { AttributeName: 'number', AttributeType: 'N' },
+//    { AttributeName: 'isEnglish', AttributeType: 'BOOL' },
+//    { AttributeName: 'title', AttributeType: 'S' },
+//    { AttributeName: 'instructor', AttributeType: 'S' },
+//    { AttributeName: 'buildingCodes', AttributeType: 'SS' },
+//    { AttributeName: 'weekdays', AttributeType: 'NS' },
+//    { AttributeName: 'times', AttributeType: 'S' },
+//    { AttributeName: 'rooms', AttributeType: 'SS' },
+//    { AttributeName: 'capacity', AttributeType: 'N' },
+//    { AttributeName: 'enrolled', AttributeType: 'N' },
+//    { AttributeName: 'reservation', AttributeType: 'S' },
+//    { AttributeName: 'majorRestriction', AttributeType: 'SS' },
+//    { AttributeName: 'prerequisites', AttributeType: 'S' },
+//    { AttributeName: 'classRestriction', AttributeType: 'N' },
 //],
 //    
-//    "PutRequest": {
-//        "Item": {
-//            "Name": {
-//                "S": "Amazon DynamoDB"
+//    'PutRequest': {
+//        'Item': {
+//            'Name': {
+//                'S': 'Amazon DynamoDB'
 //            },
-//            "Category": {
-//                "S": "Amazon Web Services"
+//            'Category': {
+//                'S': 'Amazon Web Services'
 //            }
 //        }
 //    }

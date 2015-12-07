@@ -6,7 +6,7 @@
 //    @description: Postgres database manager using Sequelize.js
 
 (function () {
-    "use strict"
+    'use strict'
     
     var stats = {}
     
@@ -27,7 +27,7 @@
 //        },
 //    }
     
-    module.exports.append(data, callback) {
+    module.exports.append = function (data, callback) {
         var object = {};
         
         if (data.operation !== null && typeof data.operation === 'string' && data.lapTimes !== null && typeof data.lapTimes === 'object') {
@@ -48,14 +48,14 @@
         } else if (typeof callback === 'function' && module.exports.commitRule === null) {
             console.log('Passed callback function, but no commit rule specified.')
             callback(null, object)
-        } else ((typeof callback !== 'function' || callback === null) && typeof module.exports.commitRule === 'function') {
+        } else if ((typeof callback !== 'function' || callback === null) && typeof module.exports.commitRule === 'function') {
             console.error(Error('Callback is not a function.'))
         } else if (module.exports.localOnly && typeof callback === 'function') {
             callback(null, object)
         }
     }
     
-    module.exports.commit(callback) {
+    module.exports.commit = function (callback) {
         if (!module.exports.localOnly) {
             var slice = stats.splice(0, 25)
 
@@ -72,10 +72,10 @@
                     }
                 })
             } else {
-                throw Error("Commit rule not specified.")
+                throw Error('Commit rule not specified.')
             }
         } else {
-            console.error("Commit rule is set to local only.")
+            console.error('Commit rule is set to local only.')
         }
     }
 
