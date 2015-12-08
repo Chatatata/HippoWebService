@@ -145,7 +145,7 @@
             throw Error('Invalid arguments.')
         }
 
-        Parser.fetch(string, function (rows) {
+        Parser.fetch(string, function (err, rows) {
             if (rows.length) db.collection('RawSections').insertMany(rows, callback)
             else callback(null, null)
         })

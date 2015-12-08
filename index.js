@@ -58,7 +58,7 @@ var Util        = require('./utility');             //  Utilities
 
 
 var Sync = require('./mongodb/sync')
-Sync.init(argv.db)
+if (!argv.test) Sync.init(argv.db)
 
 //  Debug trigger
 var debug = true;
