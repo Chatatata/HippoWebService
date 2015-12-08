@@ -131,7 +131,7 @@
                                 } else if (order == 1) {
                                     //  Course code in format %'BLG' %212 %true
                                     sectionObject.code = text.substring(0, 3)
-                                    sectionObject.number = parseInt(text.substring(4, 7))
+                                    sectionObject.number = text.substring(4, 7)
                                     sectionObject.isEnglish = text.charAt(7) == 'E'
                                 } else if (order == 2) {
                                     //  Title
@@ -144,13 +144,7 @@
                                     sectionObject.buildingCodes = text.split(' ')
                                 } else if (order == 5) {
                                     //  Weekday
-                                    try {
-                                        var weekdays = []
-                                    } catch (err) {
-                                        console.error(err + ', coursespace: ' + string + ', crn:' + sectionObject.crn.N)
-                                    } finally {
-                                        sectionObject.weekdays = text.split(' ')
-                                    }
+                                    sectionObject.weekdays = text.split(' ')
                                 } else if (order == 6) {
                                     //  Time
                                     //  TODO: Time parsing.
@@ -250,7 +244,7 @@
 //
 //                    console.log(stats[stats.length - 1]);
 
-                    callback(result);
+                    callback(null, result);
                 }
             }
         });
