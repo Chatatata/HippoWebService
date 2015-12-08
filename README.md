@@ -2,6 +2,8 @@
 
 Hippo Web Service is the back-end support service for Hippo.
 
+[![Build Status](https://travis-ci.org/Chatatata/HippoWebService.svg?branch=master)](https://travis-ci.org/Chatatata/HippoWebService)
+
 > Hippo has no relationship by any means with Istanbul Technical University, and its sub-organizations. Use at your own risk.
 
 ### Features
