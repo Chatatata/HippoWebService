@@ -33,89 +33,64 @@
 (function() {
     'use strict'
 
-    var Q = require('q');               //  kriskowal's promise implementation
+    var request = require('request')
 
-    var nodefiedrequest = require('request');
-    var request = function (options) {
-        var deferred = Q.defer();
+    var DomParser = require('dom-parser')
 
-        nodefiedrequest(options, function (error, response, body) {
-            if (error) deferred.reject(error);
-            else {
-                var Response = {};
-
-                Response.response = response;
-                Response.body = body;
-
-                deferred.resolve(Response);
-            }
-        });
-
-        return deferred.promise;
-    }
-
-    var DomParser = require('dom-parser');
-
-    var debug = true;
+    var debug = true
 
 //        getAccountInformation();
 
-    function getAccountInformation(account) {
-        var results = [];
+    function getAccountInformation(account, callback) {
+        var results = []
 
-        var cookieJar = nodefiedrequest.jar();
+        var cookieJar = nodefiedrequest.jar()
 
-        return Q.resolve()
+        async.waterfall([
+            function (callback) {
+                var options = {
+                    method: 'GET',
+                    url: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/twbkwbis.P_WWWLogin',
+                    headers: {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'Upgrade-Insecure-Requests': '1',
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36',
+                        'Referer': 'http://www.sis.itu.edu.tr/',
+                        'Accept-Encoding': 'gzip, deflate, sdch',
+                        'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.6,en;q=0.4,de;q=0.2',
+                        'Content-Type': 'text/plain'
+                    },
+                    followRedirect: false,
+                    jar: cookieJar,
+                }
 
-        //  0
-        .then(function () {
-            var options = {
-                method: 'GET',
-                url: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/twbkwbis.P_WWWLogin',
-                headers: {
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Upgrade-Insecure-Requests': '1',
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36',
-                    'Referer': 'http://www.sis.itu.edu.tr/',
-                    'Accept-Encoding': 'gzip, deflate, sdch',
-                    'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.6,en;q=0.4,de;q=0.2',
-                    'Content-Type': 'text/plain'
-                },
-                followRedirect: false,
-                jar: cookieJar,
+                return request(options, callback);
+            }, function (result, callback) {
+                console.log(result.response.statusCode);
+                results.push(result);
+
+                if (result.response.statusCode != 302) return callback(Error('Could not connect to server.'));
+
+                var options = {
+                    method: 'GET',
+                    url: result.response.headers.location,
+                    headers: {
+                        'Cache-Control': 'private',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'Upgrade-Insecure-Requests': '1',
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36',
+                        'Referer': 'http://www.sis.itu.edu.tr/',
+                        'Accept-Encoding': 'gzip, deflate, sdch',
+                        'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.6,en;q=0.4,de;q=0.2'
+                    },
+                    followRedirect: false,
+                    jar: cookieJar,
+                }
+
+                return request(options, callback);
             }
+        ], callback)
 
-            return request(options);
-        })
-
-        //  1
-        .then(function (result) {
-            console.log(result.response.statusCode);
-            results.push(result);
-
-            if (result.response.statusCode != 302) return Q.reject(Error('Could not connect to server.'));
-
-            var options = {
-                method: 'GET',
-                url: result.response.headers.location,
-                headers: {
-                    'Cache-Control': 'private',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Upgrade-Insecure-Requests': '1',
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36',
-                    'Referer': 'http://www.sis.itu.edu.tr/',
-                    'Accept-Encoding': 'gzip, deflate, sdch',
-                    'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.6,en;q=0.4,de;q=0.2'
-                },
-                followRedirect: false,
-                jar: cookieJar,
-            }
-
-            return request(options);
-        })
-        .catch(function (error) {
-            console.error(error);
-        })
 
         //  2
         .then(function (result) {
