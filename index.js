@@ -39,9 +39,9 @@
 
 'use strict'                                        //  ES6
 
-var package     = require('./package.json')         //  Package info
+var packageInfo     = require('./package.json')         //  Package info
 
-var VERSION     = package.version
+var VERSION     = packageInfo.version
 
 console.log('hippohttpd (v. ' + VERSION + ')\nType \'help\' to see help.\n')
 
@@ -51,7 +51,7 @@ var table       = require('text-table')             //	Console commands listing 
 var assert      = require('assert')                 //	C type assertion test
 var argv        = require('yargs').argv             //	Run argument vector parser
 
-//var Enrollment = require('./enrollment');         //  Root server account manager subroutine
+var PortalParser = require('./portalParser');         //  Root server account manager subroutine
 
 //var Analytics   = require('./analytics');           //  Analytics
 var Util        = require('./utility');             //  Utilities
