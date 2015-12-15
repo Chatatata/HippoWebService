@@ -14,7 +14,7 @@ Hippo Web Service is the back-end support service for Hippo.
   - Some primitive benchmarking utilities in order to test the environment.
 
 ### Version
-1.1.9
+1.2.1 (nightly build)
 
 ### Stack
 
@@ -24,7 +24,7 @@ Hippo uses following packages or applications, currently:
 * [hapi.js] - fast node.js network app framework
 * [async] - asynchronous control-flow library
 
-> As I do not believe that promise implementations (i.e. Promises/A+, kriskowal's Q, bluebird etc.) are mature enough to be played with, I chose to write the code with callbacks.
+> I personally do not believe that promise implementations (i.e. Promises/A+, kriskowal's Q, bluebird etc.) are mature enough to be played with, I chose to write the code with callbacks.
 
 ### Installation
 

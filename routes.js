@@ -34,8 +34,8 @@
     'use strict'
 
     module.exports.start = function (port) {
-        var Sync        = require('./mongodb/sync')
-        var Parser      = require('./mongodb/scheduleParser')
+        var Sync        = require('./sync')
+        var Parser      = require('./scheduleParser')
 
         var Hapi        = require('hapi')
 

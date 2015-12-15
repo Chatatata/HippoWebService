@@ -45,8 +45,8 @@
 //     ,  Analytics   = require('../analytics')
      ,  Parser      = require('./scheduleParser')
 
-    var buildings   = require('../static/Buildings');             //  Load static data
-    var courseCodes = require('../static/CourseCodes');
+    var buildings   = require('./static/Buildings');                 //  Load static data
+    var courseCodes = require('./static/CourseCodes');
 
     var jobs        = [];
 

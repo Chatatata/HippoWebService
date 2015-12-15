@@ -37,27 +37,26 @@
 //
 //    'use strict'; over the project due to ES6-dependent architecture!
 
-'use strict'                                        //  ES6
+'use strict'                                            //  ES6
 
 var packageInfo     = require('./package.json')         //  Package info
 
-var VERSION     = packageInfo.version
+var VERSION         = packageInfo.version
 
 console.log('hippohttpd (v. ' + VERSION + ')\nType \'help\' to see help.\n')
 
-var moment      = require('moment')                 //	Timing classes, moment.js
-var now         = require('performance-now')        //	Benchmarking, performance measuring
-var table       = require('text-table')             //	Console commands listing helper
-var assert      = require('assert')                 //	C type assertion test
-var argv        = require('yargs').argv             //	Run argument vector parser
+var moment          = require('moment')                 //	Timing classes, moment.js
+var now             = require('performance-now')        //	Benchmarking, performance measuring
+var table           = require('text-table')             //	Console commands listing helper
+var assert          = require('assert')                 //	C type assertion test
+var argv            = require('yargs').argv             //	Run argument vector parser
 
-var PortalParser = require('./portalParser');         //  Root server account manager subroutine
+var PortalParser    = require('./portalParser');        //  Root server account manager subroutine
 
-//var Analytics   = require('./analytics');           //  Analytics
-var Util        = require('./utility');             //  Utilities
+var Util            = require('./utility');             //  Utilities
 
 
-var Sync = require('./mongodb/sync')
+var Sync = require('./sync')
 if (!argv.test) Sync.init(argv.db)
 
 //  Debug trigger

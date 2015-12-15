@@ -125,7 +125,7 @@ function fetch(assert, done, string) {
 }
 
 require('../static/CourseCodes').forEach(function (element) {
-    exports['test fetch ' + element] = function (assert, done) {
+    exports['test schedule fetcher: ' + element] = function (assert, done) {
         fetch(assert, done, element)
     }
 })
