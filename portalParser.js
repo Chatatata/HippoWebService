@@ -422,8 +422,8 @@
     }
 
     module.exports.getAccountInformation = function (account, callback) {
-        fetch(account, function (err, rawData) {
-            parse(rawData, callback)
+        module.exports.fetch(account, function (err, rawData) {
+            module.exports.parse(rawData, callback)
         })
     }
 }());
