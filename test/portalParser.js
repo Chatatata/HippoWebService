@@ -44,18 +44,25 @@ exports['test account fetcher: exampleAcc.json'] = function (assert, done) {
         assert.strictEqual(typeof rawData.schedule, 'string', 'Schedule should be a string')
 
         Parser.parse(rawData, function (student) {
+            //  Personal Information
             assert.strictEqual(typeof student.personalInformation, 'object', 'Student should have personal information object')
             assert.strictEqual(typeof student.personalInformation.name, 'string', 'Student name should be a string')
             assert.strictEqual(typeof student.personalInformation.surname, 'string', 'Student surname should be a string')
             assert.strictEqual(typeof student.personalInformation.studentID, 'string', 'Student ID should be a string')
-            assert.strictNotEqual(parseInt(student.personalInformation.studentID), null, 'Student ID should be a number string')
+            assert.test(isNumeric(student.personalInformation.studentID), 'Student ID should be a number string')
             assert.strictEqual(typeof student.personalInformation.ID, 'string', 'Student legal ID should be a string')
-            assert.strictNotEqual(parseInt(student.personalInformation.ID), null, 'Student legal ID should be a number string')
+            assert.strictNotEqual(isNumeric(student.personalInformation.ID), null, 'Student legal ID should be a number string')
             assert.strictEqual(typeof student.personalInformation.level, 'string', 'Student level should be a string')
             assert.strictEqual(typeof student.personalInformation.birthPlace, 'string', 'Student birth place should be a string')
             assert.strictEqual(typeof student.personalInformation.birthDate, 'string', 'Student birth date should be a string')
             assert.strictEqual(typeof student.personalInformation.registrationDate, 'string', 'Student registration date should be a string')
 
+            assert.strictEqual(student.grades.constructor, Array, 'Grades should be array')
+
+            student.grades.forEach(function (element) {
+                assert.strictEqual(element.cosntructor, Grade, 'Each grade should be a Grade class instance')
+                assert.st
+            })
         })
     })
 }

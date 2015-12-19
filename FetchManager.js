@@ -33,20 +33,20 @@
 (function () {
     'use strict'
 
-    var os          = require('os')                                  //  OS-layer functions
-     ,  fs          = require('fs')                                  //  File system
-     ,  request     = require('request')                             //  Requests lib
-     ,  uuid        = require('uuid')                                //  Rigorous implementation of RFC4122 (v1 and v4) UUIDs
-     ,  now         = require('performance-now')                     //  Benchmarking, performance measuring
-     ,  scheduler   = require('node-schedule')                       //  date-based scheduling
-     ,  async       = require('async')                               //  async helper library
-     ,  MongoClient = require('mongodb').MongoClient                 //  MongoDB driver
-     ,  db          = null
-//     ,  Analytics   = require('../analytics')
-     ,  Parser      = require('./scheduleParser')
+    var os                  = require('os')                                  //  OS-layer functions
+     ,  fs                  = require('fs')                                  //  File system
+     ,  request             = require('request')                             //  Requests lib
+     ,  uuid                = require('uuid')                                //  Rigorous implementation of RFC4122 (v1 and v4) UUIDs
+     ,  now                 = require('performance-now')                     //  Benchmarking, performance measuring
+     ,  scheduler           = require('node-schedule')                       //  date-based scheduling
+     ,  async               = require('async')                               //  async helper library
+     ,  MongoClient         = require('mongodb').MongoClient                 //  MongoDB driver
+     ,  db                  = null
+     ,  ScheduleParser      = require('./scheduleParser')                    //  Schedule parser module
+     ,  PortalParser        = require('./portalParser')                      //  Portal parser module
 
-    var buildings   = require('./static/Buildings');                 //  Load static data
-    var courseCodes = require('./static/CourseCodes');
+    var buildings           = require('./static/Buildings');                 //  Load static data
+    var courseCodes         = require('./static/CourseCodes');
 
     var jobs        = [];
 
@@ -140,12 +140,16 @@
         db.collection.find(json).toArray(callback)
     }
 
+    module.exports.registerAccount = function (account, callback) {
+
+    }
+
     function addRows(string, callback) {
         if (typeof string !== 'string' || typeof callback !== 'function') {
             throw Error('Invalid arguments.')
         }
 
-        Parser.fetch(string, function (err, rows) {
+        ScheduleParser.fetch(string, function (err, rows) {
             if (rows.length) db.collection('RawSections').insertMany(rows, callback)
             else callback(null, null)
         })

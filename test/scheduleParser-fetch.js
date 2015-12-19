@@ -30,7 +30,7 @@
 
 //  Unit test case: -fetch()
 function fetch(assert, done, string) {
-    var Parser = require('../mongodb/scheduleParser')
+    var Parser = require('../scheduleParser')
 
     Parser.fetch(string, function (err, code) {
         assert.equal(err, null, 'Error thrown by fetching')

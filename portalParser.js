@@ -46,7 +46,7 @@
 
         var cookieJar = request.jar()
 
-        var studentData = {}
+        var studentData = { account: account }
 
         async.waterfall([
             function (callback) {
@@ -415,17 +415,21 @@
             },
             schedule: function (callback) {
                 callback()
+            },
+            account: function (callback) {
+                student.account = studentData.account
             }
         }, function (err, results) {
             callback (err, student)
         })
     }
 
-    module.exports.getAccountInformation = function (account, callback) {
+    module.exports.studentInformation = function (account, callback) {
         module.exports.fetch(account, function (err, rawData) {
             module.exports.parse(rawData, callback)
         })
     }
+
 }());
 
 
