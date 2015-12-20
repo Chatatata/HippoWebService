@@ -38,8 +38,5 @@ Thumbs.db
 
 # Secure information #
 ######################
-/test/exampleAcc.json
-/test/exampleTranscript.html
-/test/exampleSchedule.html
-/ab/
+/sensitive-information/
 portalParserHeaders.json

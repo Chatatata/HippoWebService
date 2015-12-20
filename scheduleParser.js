@@ -31,12 +31,14 @@
 //    @description: Hippo parser module
 
 (function () {
-    var request     = require('request')                             //  Requests lib
-     ,  now         = require('performance-now')                     //  Benchmarking, performance measuring
-     ,  Iconv       = require('iconv').Iconv                          //  CP1254 decoder
-     ,  moment      = require('moment')                               //  Timing classes, moment.js
-     ,  htmlparser  = require('htmlparser2')                          //  HTML parser
-     ,  assert      = require('assert')                               //  C style assertion test
+    'use strict'
+
+    var request             = require('request')                             //  Requests lib
+     ,  now                 = require('performance-now')                     //  Benchmarking, performance measuring
+     ,  Iconv               = require('iconv').Iconv                         //  CP1254 decoder
+     ,  moment              = require('moment')                              //  Timing classes, moment.js
+     ,  htmlparser          = require('htmlparser2')                         //  HTML parser
+     ,  assert              = require('assert')                              //  C style assertion test
 
     module.exports.fetch = function (string, callback) {
         var stopwatches = [ now() ];
@@ -49,7 +51,7 @@
         request({
             url: 'http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php',
             qs: {
-                'fb': string,
+                fb: string,
             },
             encoding: null,
         }, function (error, response, body) {
@@ -248,16 +250,6 @@
                 }
             }
         });
-    }
-
-    module.exports.parseIdentifier = function (text) {
-        var courseObject = {}
-
-        courseObject.code = text.substring(0, 3)
-        courseObject.number = parseInt(text.substring(4, 7))
-        courseObject.isEnglish = text.charAt(7) == 'E'
-
-        return courseObject
     }
 }())
 

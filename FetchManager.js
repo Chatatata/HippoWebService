@@ -42,11 +42,11 @@
      ,  async               = require('async')                               //  async helper library
      ,  MongoClient         = require('mongodb').MongoClient                 //  MongoDB driver
      ,  db                  = null
-     ,  ScheduleParser      = require('./scheduleParser')                    //  Schedule parser module
-     ,  PortalParser        = require('./portalParser')                      //  Portal parser module
+     ,  ScheduleParser      = require('./ScheduleParser')                    //  Schedule parser module
+     ,  PortalParser        = require('./PortalParser')                      //  Portal parser module
 
-    var buildings           = require('./static/Buildings');                 //  Load static data
-    var courseCodes         = require('./static/CourseCodes');
+    var buildings           = require('./static-content/Buildings')          //  Load static data
+    var courseCodes         = require('./static-content/CourseCodes')
 
     var jobs        = [];
 
@@ -140,8 +140,18 @@
         db.collection.find(json).toArray(callback)
     }
 
-    module.exports.registerAccount = function (account, callback) {
+    module.exports.parseIdentifier = function (text) {
+        var courseObject = {}
 
+        courseObject.code = text.substring(0, 3)
+        courseObject.number = parseInt(text.substring(4, 7))
+        courseObject.isEnglish = text.charAt(7) == 'E'
+
+        return courseObject
+    }
+
+    module.exports.registerAccount = function (account, callback) {
+        PortalParser.studentInformation(account, callback)
     }
 
     function addRows(string, callback) {

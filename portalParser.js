@@ -33,13 +33,13 @@
 (function() {
     'use strict'
 
-    var fs = require('fs')
-    var request = require('request')
-    var DomParser = require('dom-parser')
-    var async = require('async')
-    var htmlparser = require('htmlparser2')
+    var fs                      = require('fs')
+    var request                 = require('request')
+    var DomParser               = require('dom-parser')
+    var async                   = require('async')
+    var htmlparser              = require('htmlparser2')
 
-    var headers = require('./portalParserHeaders.json')
+    var headers = require('./static-content/portalParserHeaders.json')
 
     module.exports.fetch = function (account, finalCallback) {
         var responses = []

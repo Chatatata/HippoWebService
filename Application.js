@@ -51,18 +51,16 @@ var table           = require('text-table')             //	Console commands list
 var assert          = require('assert')                 //	C type assertion test
 var argv            = require('yargs').argv             //	Run argument vector parser
 
-var PortalParser    = require('./portalParser');        //  Root server account manager subroutine
-
-var Util            = require('./utility');             //  Utilities
+var Util            = require('./Utility');             //  Utilities
 
 
-var Sync = require('./sync')
-if (!argv.test) Sync.init(argv.db)
+var FetchManager    = require('./FetchManager')
+if (!argv.test) FetchManager.init(argv.db)
 
 //  Debug trigger
 var debug = true;
 if (!argv.port) console.log('No port specified, defaults to 3000.'.verbose)
-require('./routes').start(argv.port)               //  Main routes controller
+require('./RouteController').start(argv.port)               //  Main routes controller
 
 process.stdin.setEncoding('utf8');
 process.stdin.on('readable', function() {
@@ -73,7 +71,7 @@ process.stdin.on('readable', function() {
 
         switch (argv[0].trim()) {
             case 'destroy':
-                Sync.destroy(function (err, result) {
+                FetchManager.destroy(function (err, result) {
                     if (err) console.error(err);
                     else if (debug) console.log(result);
 
@@ -82,32 +80,32 @@ process.stdin.on('readable', function() {
                 break
 
             case 'push':
-                Sync.push(function (err) {
+                FetchManager.push(function (err) {
                     if (err) console.error(err)
                     else Util.log('Successfully renewed.')
                 })
                 break
 
             case 'pull':
-                Sync.pull(argv[1].trim(), function (err, results) {
+                FetchManager.pull(argv[1].trim(), function (err, results) {
                     if (err) console.error(err)
                     else Util.log(results)
                 })
                 break
 
             case 'stats':
-                Sync.stats();
+                FetchManager.stats();
                 break
 
             case 'get':
-                Sync.get(argv[1].trim(), function (err, results) {
+                FetchManager.get(argv[1].trim(), function (err, results) {
                     if (err) console.error(err)
                     else Util.log(results)
                 })
                 break
 
             case 'find':
-                Sync.find(argv[1].trim(), function (err, results) {
+                FetchManager.find(argv[1].trim(), function (err, results) {
                     if (err) console.error(err)
                     else {
                         console.log(results)
@@ -116,7 +114,7 @@ process.stdin.on('readable', function() {
                 break
 
             case 'count':
-                Sync.count(function (err, rawSections, analytics) {
+                FetchManager.count(function (err, rawSections, analytics) {
                     if (err) console.error(err);
                     else {
                         console.log('RawSections: ' + rawSections)
@@ -126,10 +124,10 @@ process.stdin.on('readable', function() {
                 break
 
             case 'list':
-                Sync.count(function (err, rawSections, analytics) {
+                FetchManager.count(function (err, rawSections, analytics) {
                     if (err) console.error(err);
                     else {
-                        Sync.list(function (err, result) {
+                        FetchManager.list(function (err, result) {
                             if (err) console.error(err)
                             else if (result.length) {
                                 Util.log('Current collections ->')
@@ -145,7 +143,7 @@ process.stdin.on('readable', function() {
                 break
 
             case '_fetch':
-                Sync.test.fetch(function (err, result, time) {
+                FetchManager.test.fetch(function (err, result, time) {
                     if (err) console.error(err)
                     else console.log(result, time)
                 })
