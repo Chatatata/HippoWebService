@@ -14,7 +14,7 @@ Hippo Web Service is the back-end support service for Hippo.
   - Some primitive benchmarking utilities in order to test the environment.
 
 ### Version
-1.2.1 (nightly build)
+1.2.4 (nightly build)
 
 ### Stack
 

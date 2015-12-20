@@ -247,8 +247,24 @@
 
                 studentData.schedule = body
 
+                var options = {
+                    method: 'GET',
+                    url: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/bwgkogad.P_SelectEmalView',
+                    headers: {
+                        Referer: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/twbkwbis.P_GenMenu?name=bmenu.P_RegMnu',
+                    },
+                    followRedirect: false,
+                    jar: cookieJar,
+                }
+
+                request(options, callback)
+            }, function (response, body, callback) {
+                if (response.statusCode != 200) finalCallback(Error('Could not reach student email'))
+
+                studentData.email = body
+
                 finalCallback(null, studentData)
-            }
+            }, 
         ])
     }
 
@@ -418,7 +434,8 @@
             },
             account: function (callback) {
                 student.account = studentData.account
-            }
+            },
+            email: function ()
         }, function (err, results) {
             callback (err, student)
         })

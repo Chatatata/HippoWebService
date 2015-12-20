@@ -43,7 +43,7 @@ var packageInfo     = require('./package.json')         //  Package info
 
 var VERSION         = packageInfo.version
 
-console.log('hippohttpd (v. ' + VERSION + ')\nType \'help\' to see help.\n')
+console.log('hippohttpd (v. ' + VERSION + ')\nType \'?\' to see help, \'.exit\' to exit.\n')
 
 var moment          = require('moment')                 //	Timing classes, moment.js
 var now             = require('performance-now')        //	Benchmarking, performance measuring
@@ -62,111 +62,112 @@ var debug = true;
 if (!argv.port) console.log('No port specified, defaults to 3000.'.verbose)
 require('./RouteController').start(argv.port)               //  Main routes controller
 
-process.stdin.setEncoding('utf8');
-process.stdin.on('readable', function() {
-    var chunk = process.stdin.read();
+var readline = require('readline');
 
+var rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+rl.on('line', function (chunk) {
     if (chunk !== null) {
-        var argv = chunk.split(' ');
+        var argv = chunk.split(' ')
 
-        switch (argv[0].trim()) {
-            case 'destroy':
-                FetchManager.destroy(function (err, result) {
-                    if (err) console.error(err);
-                    else if (debug) console.log(result);
+        argv.forEach(function (element) { element.trim() })
 
-                    if (!err) Util.log('Successfully destroyed.');
-                })
-                break
-
-            case 'push':
-                FetchManager.push(function (err) {
+        switch (argv[0]) {
+            case 'db.dropAll':
+                FetchManager.dropAllCollections(function (err, result) {
                     if (err) console.error(err)
-                    else Util.log('Successfully renewed.')
+                    else if (debug) console.log(result)
+
+                    if (!err) Util.log('Successfully destroyed.')
                 })
                 break
 
-            case 'pull':
-                FetchManager.pull(argv[1].trim(), function (err, results) {
+            case 'db.rebuild':
+                FetchManager.rebuildAllCollections(function (err) {
                     if (err) console.error(err)
-                    else Util.log(results)
+                    else Util.log('Successfully rebuilt.')
                 })
                 break
 
-            case 'stats':
-                FetchManager.stats();
-                break
-
-            case 'get':
-                FetchManager.get(argv[1].trim(), function (err, results) {
-                    if (err) console.error(err)
-                    else Util.log(results)
-                })
-                break
-
-            case 'find':
-                FetchManager.find(argv[1].trim(), function (err, results) {
-                    if (err) console.error(err)
-                    else {
-                        console.log(results)
-                    }
-                })
-                break
-
-            case 'count':
-                FetchManager.count(function (err, rawSections, analytics) {
+            case 'db.list':
+                FetchManager.countCollections(function (err, rawSections, analytics) {
                     if (err) console.error(err);
                     else {
-                        console.log('RawSections: ' + rawSections)
-                        console.log('Analytics: ' + analytics)
-                    }
-                })
-                break
-
-            case 'list':
-                FetchManager.count(function (err, rawSections, analytics) {
-                    if (err) console.error(err);
-                    else {
-                        FetchManager.list(function (err, result) {
+                        FetchManager.listCollections(function (err, result) {
                             if (err) console.error(err)
                             else if (result.length) {
-                                Util.log('Current collections ->')
-                                console.log('                                         1. RawSections     : ' + rawSections)
-                                console.log('                                         2. Analytics       : ' + analytics)
+                                Util.log('\n Current collections:')
+                                console.log('  1. RawSections     : ' + rawSections)
+                                console.log('  2. Analytics       : ' + analytics)
                             } else {
-                                Util.log('No collection to show.')
+                                Util.log('  No collection to show.')
                             }
                         })
                     }
                 })
-
                 break
 
-            case '_fetch':
+            case 'schedule.update':
+                FetchManager.updateSchedule(argv[1], function (err, result) {
+                    if (err) console.error(err)
+                    else Util.log('Successfully updated.')
+                })
+                break
+
+            case 'schedule.get':
+                FetchManager.courseWithCRN(argv[1], function (err, results) {
+                    if (err) console.error(err)
+                    else Util.log(results)
+                })
+                break
+
+            case 'users.register':
+                if (argv.length == 4) {
+                    var account = {
+                        username: argv[1],
+                        password: argv[2],
+                        PIN: argv[3],
+                    }
+
+                    Util.log(' Checking account information')
+                    FetchManager.register(account, function (err, data) {
+
+                    })
+                } else {
+                    Util.log(' Register Account')
+                    Util.log(' Usage: [register] [username] [password] [PIN]')
+                }
+                break
+
+            case 'tests.fetch':
                 FetchManager.test.fetch(function (err, result, time) {
                     if (err) console.error(err)
                     else console.log(result, time)
                 })
                 break
 
-            case 'debug':
+            case 'util.debug':
                 debug = !debug
                 break
 
-            case 'help':
+            case '?':
                 Util.flushConsole(function () {
                     Util.help()
                 })
                 break
 
-            case 'quit':
+            case '.exit':
                 process.exit()
                 break
 
+            case '':
+                break
+
             default:
-                console.log('Unrecognized operation.')
+                console.log('Unrecognized command: ' + argv[0])
         }
     }
-});
-
-
+})

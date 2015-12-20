@@ -65,7 +65,8 @@
         })
     }
 
-    module.exports.destroy = function (callback) {
+    //  Database operations
+    module.exports.dropAllCollections = function (callback) {
         async.series({
             Sections: function (callback) {
                 db.dropCollection('RawSections', callback)
@@ -76,42 +77,27 @@
         }, callback)
     }
 
-    module.exports.push = function (callback) {
+    module.exports.rebuildAllCollections = function (callback) {
         async.series({
-            Sections: function (callback) {
+            Drop: function (callback) {
+                module.exports.dropAllCollections(callback)
+            },
+            SectionsCreate: function (callback) {
                 db.createCollection('RawSections', callback)
             },
             CRNIndex: function (callback) {
                 db.collection('RawSections').createIndex({ crn: 1 }, { unique: true }, callback)
             },
-            TextIndex: function (callback) {
-                callback()
-            },
             Analytics: function (callback) {
                 db.createCollection('Analytics', callback)
             },
-            Destroy: module.exports.destroy,
             Renew: function (callback) {
                 async.each(courseCodes, addRows, callback)
             }
         }, callback)
     }
 
-    module.exports.pull = function (string, callback) {
-        var isArgumentsValid = typeof string === 'string' && typeof callback === 'function'
-
-        if (isArgumentsValid) {
-            if (string === 'all') {
-                return async.each(courseCodes, updateRows, callback)
-            } else if (isCourseCode(string)) {
-                return updateRows(string, callback)
-            }
-        }
-
-        throw Error('Invalid arguments')
-    }
-
-    module.exports.count = function(callback) {
+    module.exports.countCollections = function(callback) {
         var rawSectionsCollection = db.collection('RawSections')
         var analyticsCollection = db.collection('Analytics')
 
@@ -128,19 +114,34 @@
         })
     }
 
-    module.exports.list = function (callback) {
+    module.exports.listCollections = function (callback) {
         db.listCollections().toArray(callback)
     }
 
-    module.exports.get = function(crn, callback) {
+    //  Schedule collection operations
+    module.exports.updateSchedule = function (string, callback) {
+        var isArgumentsValid = typeof string === 'string' && typeof callback === 'function'
+
+        if (isArgumentsValid) {
+            if (string === 'all') {
+                async.each(courseCodes, updateRows, callback)
+            } else if (isCourseCode(string)) {
+                updateRows(string, callback)
+            }
+        } else {
+            throw Error('Invalid arguments')
+        }
+    }
+
+    module.exports.courseWithCRN = function(crn, callback) {
         db.collection('RawSections').find({ crn: parseInt(crn) }).limit(1).toArray(callback)
     }
 
-    module.exports.find = function (json, callback) {
+    module.exports.findWithJSON = function (json, callback) {
         db.collection.find(json).toArray(callback)
     }
 
-    module.exports.parseIdentifier = function (text) {
+    module.exports.parseCourseIdentifier = function (text) {
         var courseObject = {}
 
         courseObject.code = text.substring(0, 3)
@@ -150,8 +151,14 @@
         return courseObject
     }
 
+    //  Users collection operations
     module.exports.registerAccount = function (account, callback) {
-        PortalParser.studentInformation(account, callback)
+        PortalParser.studentInformation(account, function (err, result) {
+            if (err) callback(err)
+            else {
+                callback(err, result)
+            }
+        })
     }
 
     function addRows(string, callback) {

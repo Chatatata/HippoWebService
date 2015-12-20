@@ -1,6 +1,6 @@
 {
   "name": "hippo",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "description": "Hippo Web Server",
   "main": "Application.js",
   "scripts": {
