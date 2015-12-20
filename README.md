@@ -1,8 +1,10 @@
-# Hippo Web Service
+Hippo Web Service
+----
 
 Hippo Web Service is the back-end support service for Hippo.
 
 [![Build Status](https://travis-ci.org/Chatatata/HippoWebService.svg?branch=master)](https://travis-ci.org/Chatatata/HippoWebService)
+[![Gitter](https://badges.gitter.im/Chatatata/HippoWebService.svg)](https://gitter.im/Chatatata/HippoWebService?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 > Hippo has no relationship by any means with Istanbul Technical University, and its sub-organizations. Use at your own risk.
 
@@ -51,7 +53,7 @@ $ node . --db mongodb://localhost:27017/hippo
 
 We feel completely free about contribution. Nonetheless, we have some significant styling rules one should obey them, owing to fluent communication between developers and supplying documentational consistency.
 
-If you want to join us, you may check out [our Trello board]. Mail us to write there.
+If you want to join us, you may check out [our Trello board] and [gitter chat]. Mail us to write there.
 
 License
 ----
@@ -65,6 +67,6 @@ MIT
    [nvm]: <https://www.npmjs.com/package/nvm>
    [MongoDB]: <https://www.mongodb.org>
    [our Trello board]: <https://trello.com/b/vgwiOvFh>
-
+   [gitter chat]: <https://gitter.im/Chatatata/HippoWebService?utm_source=share-link&utm_medium=link&utm_campaign=share-link>
 
  
