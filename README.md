@@ -51,6 +51,8 @@ $ node . --db mongodb://localhost:27017/hippo
 
 We feel completely free about contribution. Nonetheless, we have some significant styling rules one should obey them, owing to fluent communication between developers and supplying documentational consistency.
 
+If you want to join us, you may check out [our Trello board]. Mail us to write there.
+
 License
 ----
 
@@ -62,6 +64,7 @@ MIT
    [async]: <https://github.com/caolan/async#parallel>
    [nvm]: <https://www.npmjs.com/package/nvm>
    [MongoDB]: <https://www.mongodb.org>
+   [our Trello board]: <https://trello.com/b/vgwiOvFh>
 
 
  
