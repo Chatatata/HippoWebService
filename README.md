@@ -1,5 +1,7 @@
 # Hippo Web Service
 
+[![Join the chat at https://gitter.im/Chatatata/HippoWebService](https://badges.gitter.im/Chatatata/HippoWebService.svg)](https://gitter.im/Chatatata/HippoWebService?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Hippo Web Service is the back-end support service for Hippo.
 
 [![Build Status](https://travis-ci.org/Chatatata/HippoWebService.svg?branch=master)](https://travis-ci.org/Chatatata/HippoWebService)
