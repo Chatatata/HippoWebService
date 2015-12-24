@@ -1,8 +1,8 @@
 {
   "name": "hippo",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Hippo Web Server",
-  "main": "Application.js",
+  "main": "Main.js",
   "scripts": {
     "test": "node ./test/scheduleParser-fetch -test"
   },

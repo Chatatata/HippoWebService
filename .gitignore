@@ -40,3 +40,4 @@ Thumbs.db
 ######################
 /sensitive-information/
 portalParserHeaders.json
+config.json
