@@ -28,14 +28,7 @@
 
 //    Application.js
 //
-//    ECMAScript 6, conforms to ECMA 2016 Javascript Standard.
-//
-//    Written by Buğra Ekuklu, The Digital Warehouse. Copyright 2015.
-//    thedigitalwarehouse.com
-//
-//    @description: Hippo back-end server implementation
-//
-//    'use strict'; over the project due to ES6-dependent architecture!
+//    @description: Main application execution, CLI.
 
 (function () {
     'use strict'
@@ -57,7 +50,7 @@
     var FetchManager    = require('./FetchManager')
 
     module.exports = function () {
-        if (!argv.test) FetchManager.init(config.mongodb.url)
+//        if (!argv.test) FetchManager.init(config.mongodb.url)
 
         require('./RouteController').start(config.hapi.port)               //  Main routes controller
 
@@ -86,6 +79,20 @@
                         FetchManager.countCollections(function (err, results) {
                             if (err) console.error(err)
                             else console.log(results)
+                        })
+                        break
+
+                    case 'schedule.renewOne':
+                        FetchManager.renewOne(argv[1], function (err, result) {
+                            if (err) console.error(err)
+                            else console.log(result)
+                        })
+                        break
+
+                    case 'schedule.renewAll':
+                        FetchManager.renewAll(function (err, result) {
+                            if (err) console.error(err)
+                            else console.log(result)
                         })
                         break
 

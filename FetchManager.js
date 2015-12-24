@@ -26,7 +26,7 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //    THE SOFTWARE.
 
-//    routes.js
+//    FetchManager.js
 //
 //    @description: Root server synchronization handler, based on MongoDB.
 
@@ -35,8 +35,8 @@
 
     var os                  = require('os')                                  //  OS-layer functions
      ,  fs                  = require('fs')                                  //  File system
-     ,  request             = require('request')                             //  Requests lib
-     ,  uuid                = require('uuid')                                //  Rigorous implementation of RFC4122 (v1 and v4) UUIDs
+     ,  request             = require('request')                             //  request lib
+     ,  uuid                = require('uuid')                                //  Rigorous implementation of RFC4122 UUIDs
      ,  now                 = require('performance-now')                     //  Benchmarking, performance measuring
      ,  scheduler           = require('node-schedule')                       //  date-based scheduling
      ,  mongoose            = require('mongoose')                            //  mongoose
@@ -53,13 +53,14 @@
     //  Static data
      ,  buildings           = require('./static-content/Buildings')
      ,  courseCodes         = require('./static-content/CourseCodes')
+     ,  config              = require('./config.json')                       //  Config file
      ,  async               = require('async')                               //  async helper library
 
     mongoose.connection.on('error', console.error.bind(console, 'connection error: '))
 
-    module.exports.init = mongoose.connect
+    mongoose.connect(config.mongodb.url)
 
-    module.exports.deleteAllObjects = function (callback) {
+    module.exports.deleteAll = function (callback) {
         async.series({
             Users: function (callback) {
                 User.remove({}, callback)

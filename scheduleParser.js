@@ -47,7 +47,7 @@
     module.exports = function (string, callback) {
         if (typeof string !== 'string' || typeof callback !== 'function') {
             callback(Error('Invalid arguments.'))
-        } else if (Section.isValidCode(string)) {
+        } else if (!Section.isValidCode(string)) {
             callback(Error(string + ' is not a valid course code.'))
         } else {
             //  Make HTTP request to get HTML data
@@ -63,22 +63,21 @@
 
                     console.log(new Date() + ': HTTP request cannot be resolved at \'' + string + '\' with error \'' + error + '\', retrying.');
                 } else {
-                    stopwatches[0] = now() - stopwatches[0];        //  stopwatch lap: HTTP request response time
-                    const iconv = new Iconv('CP1254', 'UTF-8');
-                    const data = iconv.convert(body);
-                    const dataString = data.toString();
+                    const iconv = new Iconv('CP1254', 'UTF-8')
+                    const data = iconv.convert(body)
+                    const dataString = data.toString()
 
                     //  Parse date
-                    var trimmedDateString = dataString.substring(dataString.search('</b>') + 4, dataString.length);
-                    trimmedDateString = trimmedDateString.substring(0, trimmedDateString.search(' \t\r\n'));
-                    const date = moment(trimmedDateString, 'DD-MM-yyyy / H:mm:ss');
-                    date.add(15, 'm');
-                    date.add(3, 's');
+                    var trimmedDateString = dataString.substring(dataString.search('</b>') + 4, dataString.length)
+                    trimmedDateString = trimmedDateString.substring(0, trimmedDateString.search(' \t\r\n'))
+                    const date = moment(trimmedDateString, 'DD-MM-yyyy / H:mm:ss')
+                    date.add(15, 'm')
+                    date.add(3, 's')
 
                     //  Check if parsed date shows past
                     if (date - Date() <= 0) {
                         setTimeout(function () {
-                            module.exports(string, callback);
+                            module.exports(string, callback)
                         }, 3000)
 
                         console.log(new Date() + ': Time inconsistency in parsed document, at \'' + string + '\' suspending for 3 seconds.')

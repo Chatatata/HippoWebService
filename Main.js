@@ -37,4 +37,6 @@
 //
 //    'use strict'; over the project due to ES6-dependent architecture!
 
+'use strict'
+
 require('./Application')()
