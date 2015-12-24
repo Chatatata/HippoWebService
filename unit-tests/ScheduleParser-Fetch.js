@@ -32,7 +32,7 @@
 function fetch(assert, done, string) {
     var Parser = require('../ScheduleParser')
 
-    Parser.fetch(string, function (err, code) {
+    Parser(string, function (err, code) {
         assert.equal(err, null, 'Error thrown by fetching')
 
         code.forEach(function (element) {

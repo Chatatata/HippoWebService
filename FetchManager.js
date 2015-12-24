@@ -39,83 +39,46 @@
      ,  uuid                = require('uuid')                                //  Rigorous implementation of RFC4122 (v1 and v4) UUIDs
      ,  now                 = require('performance-now')                     //  Benchmarking, performance measuring
      ,  scheduler           = require('node-schedule')                       //  date-based scheduling
+     ,  mongoose            = require('mongoose')                            //  mongoose
+
+    //  Model classes
+     ,  User                = require('./models/User')
+     ,  Credentials         = require('./models/Credentials')
+     ,  Section             = require('./models/Section')
+
+    //  Parser classes
+     ,  ScheduleParser      = require('./ScheduleParser')
+     ,  PortalParser        = require('./PortalParser')
+
+    //  Static data
+     ,  buildings           = require('./static-content/Buildings')
+     ,  courseCodes         = require('./static-content/CourseCodes')
      ,  async               = require('async')                               //  async helper library
-     ,  MongoClient         = require('mongodb').MongoClient                 //  MongoDB driver
-     ,  db                  = null
-     ,  ScheduleParser      = require('./ScheduleParser')                    //  Schedule parser module
-     ,  PortalParser        = require('./PortalParser')                      //  Portal parser module
 
-    var buildings           = require('./static-content/Buildings')          //  Load static data
-    var courseCodes         = require('./static-content/CourseCodes')
+    mongoose.connection.on('error', console.error.bind(console, 'connection error: '))
 
-    var jobs        = [];
+    module.exports.init = mongoose.connect
 
-    //
-    //  NoSQL table build-up
-    //
-
-    module.exports.init = function (url) {
-        MongoClient.connect(url, function (err, database) {
-            if (err) console.error('Could not connect to the server')
-            else {
-                console.log('Successfully connected to '.warn + url)
-                module.exports.db = database
-                db = module.exports.db
-            }
-        })
-    }
-
-    //  Database operations
-    module.exports.dropAllCollections = function (callback) {
+    module.exports.deleteAllObjects = function (callback) {
         async.series({
+            Users: function (callback) {
+                User.remove({}, callback)
+            },
             Sections: function (callback) {
-                db.dropCollection('RawSections', callback)
-            },
-            Analytics: function (callback) {
-                db.dropCollection('Analytics', callback)
-            }
-        }, callback)
-    }
-
-    module.exports.rebuildAllCollections = function (callback) {
-        async.series({
-            Drop: function (callback) {
-                module.exports.dropAllCollections(callback)
-            },
-            SectionsCreate: function (callback) {
-                db.createCollection('RawSections', callback)
-            },
-            CRNIndex: function (callback) {
-                db.collection('RawSections').createIndex({ crn: 1 }, { unique: true }, callback)
-            },
-            Analytics: function (callback) {
-                db.createCollection('Analytics', callback)
-            },
-            Renew: function (callback) {
-                async.each(courseCodes, addRows, callback)
+                Section.remove({}, callback)
             }
         }, callback)
     }
 
     module.exports.countCollections = function(callback) {
-        var rawSectionsCollection = db.collection('RawSections')
-        var analyticsCollection = db.collection('Analytics')
-
-        rawSectionsCollection.count({}, function (err, count) {
-            if (err) callback(err)
-            else {
-                analyticsCollection.count({}, function (err, count2) {
-                    if (err) callback(err)
-                    else {
-                        callback(null, count, count2)
-                    }
-                })
+        async.series({
+            Users: function (callback) {
+                User.count({}, callback)
+            },
+            Sections: function (callback) {
+                Section.count({}, callback)
             }
-        })
-    }
-
-    module.exports.listCollections = function (callback) {
-        db.listCollections().toArray(callback)
+        }, callback)
     }
 
     //  Schedule collection operations
@@ -133,77 +96,38 @@
         }
     }
 
-    module.exports.courseWithCRN = function(crn, callback) {
-        db.collection('RawSections').find({ crn: parseInt(crn) }).limit(1).toArray(callback)
-    }
-
-    module.exports.findWithJSON = function (json, callback) {
-        db.collection.find(json).toArray(callback)
-    }
-
-    module.exports.parseCourseIdentifier = function (text) {
-        var courseObject = {}
-
-        courseObject.code = text.substring(0, 3)
-        courseObject.number = parseInt(text.substring(4, 7))
-        courseObject.isEnglish = text.charAt(7) == 'E'
-
-        return courseObject
-    }
-
     //  Users collection operations
-    module.exports.registerAccount = function (account, callback) {
-        PortalParser.studentInformation(account, function (err, result) {
+    module.exports.challenge = function (credentials, callback) {
+        credentials.fetch(function (err, user) {
+            if (err) callback(err)
+            else user.save(callback)
+        })
+    }
+
+    module.exports.renewOne = function (string, callback) {
+        ScheduleParser(string, function (err, sections) {
+            if (err) callback(err)
+            else Section.collection.insert(sections, callback)
+        })
+    }
+
+    module.exports.renewAll = function (string, callback) {
+        var sections = {}
+
+        async.each(courseCodes, function (string, callback) {
+            ScheduleParser(string, function (err, sections) {
+                sections.forEach(function (element) {
+                    sections.push(element)
+                })
+
+                callback()
+            })
+        }, function (err) {
             if (err) callback(err)
             else {
-                callback(err, result)
+                Section.collection.insert(sections, callback)
             }
         })
-    }
-
-    function addRows(string, callback) {
-        if (typeof string !== 'string' || typeof callback !== 'function') {
-            throw Error('Invalid arguments.')
-        }
-
-        ScheduleParser.fetch(string, function (err, rows) {
-            if (rows.length) db.collection('RawSections').insertMany(rows, callback)
-            else callback(null, null)
-        })
-    }
-
-    function updateRows(string, callback) {
-        fetch(string, function (err, rows) {
-            rows.reduce(function (previous, current) {
-                db.collection('RawSections').updateOne({ crn: previous.crn }, { $set: { capacity: previous.capacity, enrolled: previous.enrolled, reservation: previous.reservation } }, callback)
-            })
-//            db.collection('RawSections').updateMany({}, callback)
-        })
-    }
-
-    function stats() {
-        if (syncStats.length) {
-            var totalElapsed = 0;
-
-            for (var i = 0; i < syncStats.length; ++i) {
-                console.log((i + 1) + '. performed in ' + syncStats[i].toFixed(2) + ' seconds.');
-                totalElapsed += syncStats[i];
-            }
-
-            console.log('- Total elapsed: ' + totalElapsed.toFixed(2) + ' seconds.');
-        } else {
-            console.log('No syncs made until now.');
-        }
-    }
-
-    function isCourseCode(string) {
-        for (var eachCode of courseCodes) {
-            if (eachCode === string) {
-                return true
-            }
-        }
-
-        return false
     }
 
     //

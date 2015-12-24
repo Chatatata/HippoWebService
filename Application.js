@@ -51,8 +51,12 @@ var table           = require('text-table')             //	Console commands list
 var assert          = require('assert')                 //	C type assertion test
 var argv            = require('yargs').argv             //	Run argument vector parser
 
-var Util            = require('./Utility');             //  Utilities
+//  Model classes
+ ,  User                = require('./models/User')
+ ,  Credentials         = require('./models/Credentials')
+ ,  Section             = require('./models/Section')
 
+var Util            = require('./Utility');             //  Utilities
 
 var FetchManager    = require('./FetchManager')
 if (!argv.test) FetchManager.init(argv.db)
@@ -76,37 +80,17 @@ rl.on('line', function (chunk) {
         argv.forEach(function (element) { element.trim() })
 
         switch (argv[0]) {
-            case 'db.dropAll':
-                FetchManager.dropAllCollections(function (err, result) {
+            case 'db.deleteAll':
+                FetchManager.deleteAll(function (err) {
                     if (err) console.error(err)
-                    else if (debug) console.log(result)
-
-                    if (!err) Util.log('Successfully destroyed.')
-                })
-                break
-
-            case 'db.rebuild':
-                FetchManager.rebuildAllCollections(function (err) {
-                    if (err) console.error(err)
-                    else Util.log('Successfully rebuilt.')
+                    else Util.log('Successfully destroyed.')
                 })
                 break
 
             case 'db.list':
-                FetchManager.countCollections(function (err, rawSections, analytics) {
-                    if (err) console.error(err);
-                    else {
-                        FetchManager.listCollections(function (err, result) {
-                            if (err) console.error(err)
-                            else if (result.length) {
-                                Util.log('\n Current collections:')
-                                console.log('  1. RawSections     : ' + rawSections)
-                                console.log('  2. Analytics       : ' + analytics)
-                            } else {
-                                Util.log('  No collection to show.')
-                            }
-                        })
-                    }
+                FetchManager.countCollections(function (err, results) {
+                    if (err) console.error(err)
+                    else console.log(results)
                 })
                 break
 
@@ -117,32 +101,41 @@ rl.on('line', function (chunk) {
                 })
                 break
 
-            case 'schedule.get':
-                FetchManager.courseWithCRN(argv[1], function (err, results) {
+            case 'section.get':
+                Section.find(JSON.parse(argv[1]), function (err, section) {
                     if (err) console.error(err)
-                    else Util.log(results)
+                    else Util.log(section)
                 })
                 break
 
-            case 'users.register':
+            case 'user.register':
                 if (argv.length == 4) {
-                    var account = {
+                    var credentials = {
                         username: argv[1],
                         password: argv[2],
                         PIN: argv[3],
                     }
 
                     Util.log(' Checking account information')
-                    FetchManager.register(account, function (err, data) {
-
+                    FetchManager.challenge(credentials, function (err) {
+                        if (err) console.error(err)
+                        else Util.log('Successfully challenged credential.')
                     })
                 } else {
                     Util.log(' Register Account')
-                    Util.log(' Usage: [register] [username] [password] [PIN]')
+                    Util.log(' Usage: [COMMAND] [username] [password] [PIN]')
                 }
                 break
 
-            case 'tests.fetch':
+            case 'user.get':
+                if (argv.length == 2) {
+                    Users.find({ id: argv[1] }).exec(function (err, user) {
+                        if (err) console.error(err)
+                        else console.log(user)
+                    })
+                }
+
+            case 'test.fetch':
                 FetchManager.test.fetch(function (err, result, time) {
                     if (err) console.error(err)
                     else console.log(result, time)

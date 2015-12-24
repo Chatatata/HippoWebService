@@ -26,7 +26,7 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //    THE SOFTWARE.
 
-//    portalParser.js
+//    PortalParser.js
 //
 //    @description: ITU/Ninova portal parser
 
@@ -39,14 +39,16 @@
     var async                   = require('async')
     var htmlparser              = require('htmlparser2')
 
+    var User                    = require('./models/User')
+
     var headers = require('./static-content/portalParserHeaders.json')
 
-    module.exports.fetch = function (account, finalCallback) {
+    function fetch(credentials, finalCallback) {
         var responses = []
 
         var cookieJar = request.jar()
 
-        var studentData = { account: account }
+        var userRawData = { credentials: credentials }
 
         async.waterfall([
             function (callback) {
@@ -108,8 +110,8 @@
                         __EVENTARGUMENT: '',
                         __VIEWSTATE: dom.getElementById('__VIEWSTATE').attributes[3].value,
                         __VIEWSTATEGENERATOR: 'C2EE9ABB',
-                        UsernameTbx: account.username,
-                        PasswordTbx: account.password,
+                        UsernameTbx: credentials.username,
+                        PasswordTbx: credentials.password,
                         'LoginBtn.x': '79',
                         'LoginBtn.y': '14',
                     },
@@ -178,9 +180,9 @@
 
                 if (response.statusCode != 200) finalCallback(Error('Could not reproduce connection sequence.'))
 
-                account.sid = body.substr(body.search('<OPTION VALUE="') + '<OPTION VALUE="'.length, 9)
+                credentials.sid = body.substr(body.search('<OPTION VALUE="') + '<OPTION VALUE="'.length, 9)
 
-                if (parseInt(account.sid)) {
+                if (parseInt(credentials.sid)) {
                     var options = {
                         method: 'POST',
                         url: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/twbkwbis.P_ValLogin',
@@ -188,8 +190,8 @@
                         followRedirect: false,
                         jar: cookieJar,
                         form: {
-                            sid: account.sid,
-                            PIN: account.PIN,
+                            sid: credentials.sid,
+                            PIN: credentials.PIN,
                             SessionId: responses[6].headers.location.substring(responses[6].headers.location.search('SessionId=') + 10, responses[6].headers.location.length + 1),
                         }
                     }
@@ -213,11 +215,11 @@
             }, function (response, body, callback) {
                 if (response.statusCode != 200) finalCallback(Error('Could not reach student image'))
 
-                studentData.transcript = body
+                userRawData.transcript = body
 
                 var options = {
                     method: 'GET',
-                    url: 'http://resimler.sis.itu.edu.tr/' + account.sid.substr(0, 3) + '/' + account.sid.substr(3, 2) + '/' + account.sid.substr(5, 4) + '.jpg',
+                    url: 'http://resimler.sis.itu.edu.tr/' + credentials.sid.substr(0, 3) + '/' + credentials.sid.substr(3, 2) + '/' + credentials.sid.substr(5, 4) + '.jpg',
                     headers: {
                         Referer: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/p_transcript_en.p_id_response',
                     },
@@ -229,7 +231,7 @@
             }, function (response, body, callback) {
                 if (response.statusCode != 200) finalCallback(Error('Could not reach student image'))
 
-                studentData.image = body
+                userRawData.image = body
 
                 var options = {
                     method: 'GET',
@@ -245,7 +247,7 @@
             }, function (response, body, callback) {
                 if (response.statusCode != 200) finalCallback(Error('Could not reach student schedule'))
 
-                studentData.schedule = body
+                userRawData.schedule = body
 
                 var options = {
                     method: 'GET',
@@ -261,45 +263,20 @@
             }, function (response, body, callback) {
                 if (response.statusCode != 200) finalCallback(Error('Could not reach student email'))
 
-                studentData.email = body
+                userRawData.email = body
 
-                finalCallback(null, studentData)
+                finalCallback(null, userRawData)
             }, 
         ])
     }
 
-    class Student {
-        constructor() {
-            //  Personal Information
-            this.personalInformation = {}
-            this.personalInformation.name = "unnamed"
-            this.personalInformation.surname = "unnamed"
-            this.personalInformation.studentID = ""
-            this.personalInformation.ID = ""
-            this.personalInformation.level = ""
-            this.personalInformation.birthPlace = ""
-            this.personalInformation.birthDate = ""
-            this.personalInformation.registrationDate = ""
-            this.personalInformation.fatherName = ""
-            this.personalInformation.registrationMethod = ""
-
-            //  Transcript content
-            this.grades = []
-            this.currentCourses = []
-        }
-
-        fullName() {
-            return this.personalInformation.name + ' ' + this.personalInformation.surname
-        }
-    }
-
-    module.exports.parse = function (studentData, callback) {
-        var student = new Student()
+    function parse(userRawData, callback) {
+        var user = new User()
 
         async.parallel({
             transcript: function (callback) {
-                studentData.transcript = studentData.transcript.substring(studentData.transcript.indexOf('<FONT FACE'), studentData.transcript.length)
-                studentData.transcript = studentData.transcript.substring(0, studentData.transcript.indexOf('**End of Document**'))
+                userRawData.transcript = userRawData.transcript.substring(userRawData.transcript.indexOf('<FONT FACE'), userRawData.transcript.length)
+                userRawData.transcript = userRawData.transcript.substring(0, userRawData.transcript.indexOf('**End of Document**'))
 
                 var index = 0
                 var array = []
@@ -321,38 +298,38 @@
                                 //  Here we have tailored inlines
                                 array.push(text)
 
-                                //  First, student information
+                                //  First, user information
                                 if (step == 0) {
                                     switch (array[array.length - 2]) {
                                         case 'Student ID':
-                                            student.personalInformation.studentID = text
+                                            user.personal.studentID = text
                                             break
                                         case 'Republic of Turkey ID No':
-                                            student.personalInformation.ID = text
+                                            user.personal.citizenID = text
                                             break
                                         case 'Surname':
-                                            student.personalInformation.surname = text
+                                            user.personal.surname = text
                                             break
                                         case 'Level':
-                                            student.personalInformation.level = text
+                                            user.personal.level = text
                                             break
                                         case 'Name':
-                                            student.personalInformation.name = text
+                                            user.personal.name = text
                                             break
                                         case 'Birth Place':
-                                            student.personalInformation.birthPlace = text
+                                            user.personal.birthPlace = text
                                             break
                                         case 'Birth Date':
-                                            student.personalInformation.birthDate = text
+                                            user.personal.birthDate = text
                                             break
                                         case 'Reg. Date':
-                                            student.personalInformation.registrationDate = text
+                                            user.personal.registrationDate = text
                                             break
                                         case 'Father Name':
-                                            student.personalInformation.fatherName = text
+                                            user.personal.fatherName = text
                                             break
                                         case 'Reg. Type':
-                                            student.personalInformation.registrationMethod = text
+                                            user.personal.registrationMethod = text
                                             step = 1
                                             break
                                         default:
@@ -384,7 +361,8 @@
                                                 case 2:
                                                     if (text.split('')[text.length - 1] !== '*') {
                                                         grade.value = text
-                                                        student.grades.push(grade)
+                                                        grade.passed = !(grade.value === 'VF' || grade.value === 'FF')
+                                                        user.marks.push(grade)
                                                     }
 
                                                     grade = {}
@@ -404,7 +382,7 @@
                                         if (state != -1) {
                                             switch (state) {
                                                 case 0:
-                                                    student.currentCourses.push(text)
+                                                    user.currentCourses.push(text)
                                                     state = 1
                                                     break
                                                 case 1:
@@ -424,30 +402,39 @@
                     },
                 })
 
-                parser.write(studentData.transcript)
+                parser.write(userRawData.transcript)
                 parser.end()
 
-                callback()
+                callback(null)
             },
             schedule: function (callback) {
-                callback()
+                callback(null)
             },
             account: function (callback) {
-                student.account = studentData.account
+                user.account.username = userRawData.credentials.username
+                user.account.password = userRawData.credentials.password
+                user.account.PIN = userRawData.credentials.PIN
+
+                callback(null)
             },
-            email: function ()
-        }, function (err, results) {
-            callback (err, student)
+            email: function (callback) {
+                userRawData.email = userRawData.email.substring(userRawData.email.indexOf('<TD COLSPAN="2" CLASS="dddefault">') + '<TD COLSPAN="2" CLASS="dddefault">'.length, userRawData.email.length)
+                user.personal.email = userRawData.email.substring(0, userRawData.email.indexOf('\n</TD>'))
+                user.account.email = user.personal.email
+
+                callback(null)
+            }
+        }, function (err) {
+            callback (err, !err ? user:null)
         })
     }
 
-    module.exports.studentInformation = function (account, callback) {
-        module.exports.fetch(account, function (err, rawData) {
-            module.exports.parse(rawData, callback)
+    module.exports = function (credentials, callback) {
+        fetch(credentials, function (err, rawData) {
+            parse(rawData, callback)
         })
     }
-
-}());
+}())
 
 
 

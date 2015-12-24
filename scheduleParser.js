@@ -26,9 +26,9 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //    THE SOFTWARE.
 
-//    parser.js
+//    ScheduleParser.js
 //
-//    @description: Hippo parser module
+//    @description: Schedule parser module
 
 (function () {
     'use strict'
@@ -40,216 +40,200 @@
      ,  htmlparser          = require('htmlparser2')                         //  HTML parser
      ,  assert              = require('assert')                              //  C style assertion test
 
-    module.exports.fetch = function (string, callback) {
-        var stopwatches = [ now() ];
+     ,  Section             = require('./models/Section')
 
+     ,  courseCodes         = require('./static-content/CourseCodes.json')
+
+    module.exports = function (string, callback) {
         if (typeof string !== 'string' || typeof callback !== 'function') {
-            throw Error('Invalid arguments.');
-        }
+            callback(Error('Invalid arguments.'))
+        } else if (Section.isValidCode(string)) {
+            callback(Error(string + ' is not a valid course code.'))
+        } else {
+            //  Make HTTP request to get HTML data
+            request({
+                url: 'http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php',
+                qs: {
+                    fb: string,
+                },
+                encoding: null,
+            }, function (error, response, body) {
+                if (error) {
+                    module.exports(string, callback);
 
-        //  Make HTTP request to get HTML data
-        request({
-            url: 'http://www.sis.itu.edu.tr/tr/ders_programlari/LSprogramlar/prg.php',
-            qs: {
-                fb: string,
-            },
-            encoding: null,
-        }, function (error, response, body) {
-            if (error) {
-                module.exports.fetch(string, callback);
-
-                console.log(new Date() + ': HTTP request cannot be resolved at \'' + string + '\' with error \'' + error + '\', retrying.');
-            } else {
-                stopwatches[0] = now() - stopwatches[0];        //  stopwatch lap: HTTP request response time
-                const iconv = new Iconv('CP1254', 'UTF-8');
-                const data = iconv.convert(body);
-                const dataString = data.toString();
-
-                //  Parse date
-                var trimmedDateString = dataString.substring(dataString.search('</b>') + 4, dataString.length);
-                trimmedDateString = trimmedDateString.substring(0, trimmedDateString.search(' \t\r\n'));
-                const date = moment(trimmedDateString, 'DD-MM-yyyy / H:mm:ss');
-                date.add(15, 'm');
-                date.add(3, 's');
-
-                //  Check if parsed date shows past
-                if (date - Date() <= 0) {
-                    setTimeout(function () {
-                        module.exports.fetch(string, callback);
-                    }, 3000);
-
-                    console.log(new Date() + ': Time inconsistency in parsed document, at \'' + string + '\' suspending for 3 seconds.');
+                    console.log(new Date() + ': HTTP request cannot be resolved at \'' + string + '\' with error \'' + error + '\', retrying.');
                 } else {
-                    //  Parse courses
-                    const firstRange = dataString.search('<table  class=dersprg>');
-                    var trimmedString = dataString.substring(firstRange, dataString.length);
-                    const secondRange = trimmedString.search('</table>');
-                    trimmedString = trimmedString.substring(0, secondRange + 8);
+                    stopwatches[0] = now() - stopwatches[0];        //  stopwatch lap: HTTP request response time
+                    const iconv = new Iconv('CP1254', 'UTF-8');
+                    const data = iconv.convert(body);
+                    const dataString = data.toString();
 
-                    var searchValue = trimmedString.search('<br>');
+                    //  Parse date
+                    var trimmedDateString = dataString.substring(dataString.search('</b>') + 4, dataString.length);
+                    trimmedDateString = trimmedDateString.substring(0, trimmedDateString.search(' \t\r\n'));
+                    const date = moment(trimmedDateString, 'DD-MM-yyyy / H:mm:ss');
+                    date.add(15, 'm');
+                    date.add(3, 's');
 
-                    while (trimmedString.search('<br>') != -1) {
-                        var searchValue = trimmedString.search('<br>');
+                    //  Check if parsed date shows past
+                    if (date - Date() <= 0) {
+                        setTimeout(function () {
+                            module.exports(string, callback);
+                        }, 3000)
 
-                        trimmedString = trimmedString.substring(0, searchValue) + ' ' + trimmedString.substring(searchValue + 4, trimmedString.length);
-                    }
+                        console.log(new Date() + ': Time inconsistency in parsed document, at \'' + string + '\' suspending for 3 seconds.')
+                    } else {
+                        //  Parse courses
+                        const firstRange = dataString.search('<table  class=dersprg>')
+                        var trimmedString = dataString.substring(firstRange, dataString.length)
+                        const secondRange = trimmedString.search('</table>')
+                        trimmedString = trimmedString.substring(0, secondRange + 8)
 
-                    trimmedString = trimmedString.split('');
+                        var searchValue = trimmedString.search('<br>')
 
-                    for (var i = 0; i < trimmedString.length; i++) {
-                        if (trimmedString[i] == '&') {
-                            trimmedString[i] = '|';
+                        while (trimmedString.search('<br>') != -1) {
+                            var searchValue = trimmedString.search('<br>')
+
+                            trimmedString = trimmedString.substring(0, searchValue) + ' ' + trimmedString.substring(searchValue + 4, trimmedString.length)
                         }
-                    }
 
-                    trimmedString = trimmedString.join('');
+                        trimmedString = trimmedString.split('')
 
-                    stopwatches[1] = now() - stopwatches[0];        //  stopwatch lap: dateParsing
-
-                    var result = [];
-                    var sectionObject = {};
-
-                    var counter = 0;
-                    var order = 0;
-                    var willDelete = false
-
-                    var parser = new htmlparser.Parser({
-                        ontext: function (text) {
-                            ++counter;
-
-                            if (counter >= 31 && text != ' ') {
-                                while(text.search('  ') != -1) {
-                                    var searchValue = text.search('  ')
-
-                                    text = text.substring(0, searchValue) + text.substring(searchValue + 1, text.length);
-                                }
-
-                                text = text.trim();
-
-                                if (order == 0) {
-                                    assert.equal(text.length, 5)
-                                    //  CRN
-                                    sectionObject.crn = parseInt(text);
-                                } else if (order == 1) {
-                                    //  Course code in format %'BLG' %212 %true
-                                    sectionObject.code = text.substring(0, 3)
-                                    sectionObject.number = text.substring(4, 7)
-                                    sectionObject.isEnglish = text.charAt(7) == 'E'
-                                } else if (order == 2) {
-                                    //  Title
-                                    sectionObject.title = text
-                                } else if (order == 3) {
-                                    //  Instructor
-                                    sectionObject.instructor = text
-                                } else if (order == 4) {
-                                    //  Building codes
-                                    sectionObject.buildingCodes = text.split(' ')
-                                } else if (order == 5) {
-                                    //  Weekday
-                                    sectionObject.weekdays = text.split(' ')
-                                } else if (order == 6) {
-                                    //  Time
-                                    //  TODO: Time parsing.
-                                    sectionObject.times = text;
-                                } else if (order == 7) {
-                                    //  Room nr.s
-                                    sectionObject.rooms = text.split(' ')
-                                } else if (order == 8) {
-                                    //  Capacity
-                                    sectionObject.capacity = parseInt(text)
-                                } else if (order == 9) {
-                                    //  Enrolled
-                                    sectionObject.enrolled = parseInt(text)
-                                } else if (order == 10) {
-                                    //  Reservation
-                                    if (text === 'Yok/None') {
-                                        //  Do nothing
-                                    } else {
-                                        sectionObject.reservation = text
-                                    }
-                                } else if (order == 11) {
-                                    //  Major restrictions
-                                    if (text === 'Yok/None') {
-                                        //  Do nothing.
-                                    } else {
-                                        sectionObject.majorRestriction = text.split(' ')
-                                    }
-                                } else if (order == 12) {
-                                    //  Prerequisites
-                                    if (text === 'Yok/None') {
-                                        //  Do nothing
-                                    } else {
-                                        sectionObject.prerequisites = text
-                                    }
-                                } else if (order == 13) {
-                                    //  Class restriction
-                                    if (text === 'Diğer Şartlar') {
-                                        return;
-                                    } else if (text === 'Yok/None') {
-//                                        sectionObject.classRestriction = []
-                                    } else if (text === '4.Sınıf') {
-                                        sectionObject.classRestriction = [4]
-                                    } else {
-                                        var searchValue = text.search(' ')
-
-                                        while (searchValue != -1) {
-                                            text = text.substring(0, searchValue) + text.substring(searchValue + 1, text.length)
-
-                                            searchValue = text.search(' ')
-                                        }
-
-                                        var arr = text.split(',')
-
-                                        sectionObject.classRestriction = []
-
-                                        for (var i = 0; i < arr.length; ++i) {
-                                            if (arr[i] === '4.Sınıf' || arr[i] === '3.Sınıf' || arr[i] === '2.Sınıf' || arr[i] === '1.Sınıf') {
-                                                sectionObject.classRestriction.push(parseInt(arr[i].substring(0, 1)))
-                                            } else {
-                                                throw Error('Inconsistent class restriction string part: \'' + arr[i] + '\'')
-                                            }
-                                        }
-                                    }
-
-                                    //  Finalize
-                                    result.push(sectionObject)
-
-                                    order = -1;
-                                    sectionObject = {}
-                                }
-
-                                order++;
+                        for (var i = 0; i < trimmedString.length; i++) {
+                            if (trimmedString[i] == '&') {
+                                trimmedString[i] = '|'
                             }
                         }
-                    }, {
-                        decodeEntities: true
-                    })
 
-                    parser.write(trimmedString)
-                    parser.end()
+                        trimmedString = trimmedString.join('')
 
-//                    stats.push({
-//                        operation: {
-//                            fetch: {
-//                                string: string,
-//                                resultLength: result.length,
-//                                bytesRead: response.socket.bytesRead,
-//                            },
-//                        },
-//                        lapTimes: {
-//                            httpResponseTime: stopwatches[0],
-//                            dateParsing: stopwatches[1],
-//                            sectionParsing: stopwatches[2],
-//                            scheduling: stopwatches[3],
-//                        },
-//                    })
-//
-//                    console.log(stats[stats.length - 1]);
+                        var result = []
+                        var sectionObject = new Section()
 
-                    callback(null, result);
+                        var counter = 0
+                        var order = 0
+                        var willDelete = false
+
+                        var parser = new htmlparser.Parser({
+                            ontext: function (text) {
+                                ++counter
+
+                                if (counter >= 31 && text != ' ') {
+                                    while(text.search('  ') != -1) {
+                                        var searchValue = text.search('  ')
+
+                                        text = text.substring(0, searchValue) + text.substring(searchValue + 1, text.length);
+                                    }
+
+                                    text = text.trim()
+
+                                    if (order == 0) {
+                                        assert.equal(text.length, 5)
+                                        //  CRN
+                                        sectionObject.crn = parseInt(text);
+                                    } else if (order == 1) {
+                                        //  Course code in format %'BLG' %212 %true
+                                        sectionObject.code = text.substring(0, 3)
+                                        sectionObject.number = text.substring(4, 7)
+                                        sectionObject.isEnglish = text.charAt(7) == 'E'
+                                    } else if (order == 2) {
+                                        //  Title
+                                        sectionObject.title = text
+                                    } else if (order == 3) {
+                                        //  Instructor
+                                        sectionObject.instructor = text
+                                    } else if (order == 4) {
+                                        //  Building codes
+                                        sectionObject.buildingCodes = text.split(' ')
+                                    } else if (order == 5) {
+                                        //  Weekday
+                                        sectionObject.weekdays = text.split(' ')
+                                    } else if (order == 6) {
+                                        //  Time
+                                        //  TODO: Time parsing.
+                                        sectionObject.times = text;
+                                    } else if (order == 7) {
+                                        //  Room nr.s
+                                        sectionObject.rooms = text.split(' ')
+                                    } else if (order == 8) {
+                                        //  Capacity
+                                        sectionObject.capacity = parseInt(text)
+                                    } else if (order == 9) {
+                                        //  Enrolled
+                                        sectionObject.enrolled = parseInt(text)
+                                    } else if (order == 10) {
+                                        //  Reservation
+                                        if (text === 'Yok/None') {
+                                            //  Do nothing
+                                        } else {
+                                            sectionObject.reservation = text
+                                        }
+                                    } else if (order == 11) {
+                                        //  Major restrictions
+                                        if (text === 'Yok/None') {
+                                            //  Do nothing.
+                                        } else {
+                                            sectionObject.majorRestriction = text.split(' ')
+                                        }
+                                    } else if (order == 12) {
+                                        //  Prerequisites
+                                        if (text === 'Yok/None') {
+                                            //  Do nothing
+                                        } else {
+                                            sectionObject.prerequisites = text
+                                        }
+                                    } else if (order == 13) {
+                                        //  Class restriction
+                                        if (text === 'Diğer Şartlar') {
+                                            return;
+                                        } else if (text === 'Yok/None') {
+    //                                        sectionObject.classRestriction = []
+                                        } else if (text === '4.Sınıf') {
+                                            sectionObject.classRestriction = [4]
+                                        } else {
+                                            var searchValue = text.search(' ')
+
+                                            while (searchValue != -1) {
+                                                text = text.substring(0, searchValue) + text.substring(searchValue + 1, text.length)
+
+                                                searchValue = text.search(' ')
+                                            }
+
+                                            var arr = text.split(',')
+
+                                            sectionObject.classRestriction = []
+
+                                            for (var i = 0; i < arr.length; ++i) {
+                                                if (arr[i] === '4.Sınıf' || arr[i] === '3.Sınıf' || arr[i] === '2.Sınıf' || arr[i] === '1.Sınıf') {
+                                                    sectionObject.classRestriction.push(parseInt(arr[i].substring(0, 1)))
+                                                } else {
+                                                    throw Error('Inconsistent class restriction string part: \'' + arr[i] + '\'')
+                                                }
+                                            }
+                                        }
+
+                                        //  Finalize
+                                        result.push(sectionObject)
+
+                                        order = -1;
+                                        sectionObject = {}
+                                    }
+
+                                    order++;
+                                }
+                            }
+                        }, {
+                            decodeEntities: true
+                        })
+
+                        parser.write(trimmedString)
+                        parser.end()
+
+                        callback(null, result);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }())
 

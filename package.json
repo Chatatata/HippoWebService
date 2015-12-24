@@ -1,11 +1,14 @@
 {
   "name": "hippo",
-  "version": "1.2.4",
+  "version": "1.4.0",
   "description": "Hippo Web Server",
   "main": "Application.js",
   "scripts": {
     "test": "node ./test/scheduleParser-fetch -test"
   },
   "author": "Ekuklu, B (Chatatata)",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "mongoose": "^4.3.3"
+  }
 }
