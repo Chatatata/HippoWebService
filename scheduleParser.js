@@ -107,7 +107,7 @@
                         trimmedString = trimmedString.join('')
 
                         var result = []
-                        var sectionObject = {}
+                        var section = {}
 
                         var counter = 0
                         var order = 0
@@ -129,66 +129,66 @@
                                     if (order == 0) {
                                         assert.equal(text.length, 5)
                                         //  CRN
-                                        sectionObject.crn = parseInt(text);
+                                        section.crn = parseInt(text);
                                     } else if (order == 1) {
                                         //  Course code in format %'BLG' %212 %true
-                                        sectionObject.code = text.substring(0, 3)
-                                        sectionObject.number = text.substring(4, 7)
-                                        sectionObject.isEnglish = text.charAt(7) == 'E'
+                                        section.code = text.substring(0, 3)
+                                        section.number = text.substring(4, 7)
+                                        section.isEnglish = text.charAt(7) == 'E'
                                     } else if (order == 2) {
                                         //  Title
-                                        sectionObject.title = text
+                                        section.title = text
                                     } else if (order == 3) {
                                         //  Instructor
-                                        sectionObject.instructor = text
+                                        section.instructor = text
                                     } else if (order == 4) {
                                         //  Building codes
-                                        sectionObject.buildingCodes = text.split(' ')
+                                        section.buildingCodes = text.split(' ')
                                     } else if (order == 5) {
                                         //  Weekday
-                                        sectionObject.weekdays = text.split(' ')
+                                        section.weekdays = text.split(' ')
                                     } else if (order == 6) {
                                         //  Time
                                         //  TODO: Time parsing.
-                                        sectionObject.times = text;
+                                        section.times = text;
                                     } else if (order == 7) {
                                         //  Room nr.s
-                                        sectionObject.rooms = text.split(' ')
+                                        section.rooms = text.split(' ')
                                     } else if (order == 8) {
                                         //  Capacity
-                                        sectionObject.capacity = parseInt(text)
+                                        section.capacity = parseInt(text)
                                     } else if (order == 9) {
                                         //  Enrolled
-                                        sectionObject.enrolled = parseInt(text)
+                                        section.enrolled = parseInt(text)
                                     } else if (order == 10) {
                                         //  Reservation
                                         if (text === 'Yok/None') {
                                             //  Do nothing
                                         } else {
-                                            sectionObject.reservation = text
+                                            section.reservation = text
                                         }
                                     } else if (order == 11) {
                                         //  Major restrictions
                                         if (text === 'Yok/None') {
                                             //  Do nothing.
                                         } else {
-                                            sectionObject.majorRestriction = text.split(' ')
+                                            section.majorRestriction = text.split(' ')
                                         }
                                     } else if (order == 12) {
                                         //  Prerequisites
                                         if (text === 'Yok/None') {
                                             //  Do nothing
                                         } else {
-                                            sectionObject.prerequisites = text
+                                            section.prerequisites = text
                                         }
                                     } else if (order == 13) {
                                         //  Class restriction
                                         if (text === 'Diğer Şartlar') {
                                             return;
                                         } else if (text === 'Yok/None') {
-    //                                        sectionObject.classRestriction = []
+    //                                        section.classRestriction = []
                                         } else if (text === '4.Sınıf') {
-                                            sectionObject.classRestriction = [4]
+                                            section.classRestriction = [4]
                                         } else {
                                             var searchValue = text.search(' ')
 
@@ -200,11 +200,11 @@
 
                                             var arr = text.split(',')
 
-                                            sectionObject.classRestriction = []
+                                            section.classRestriction = []
 
                                             for (var i = 0; i < arr.length; ++i) {
                                                 if (arr[i] === '4.Sınıf' || arr[i] === '3.Sınıf' || arr[i] === '2.Sınıf' || arr[i] === '1.Sınıf') {
-                                                    sectionObject.classRestriction.push(parseInt(arr[i].substring(0, 1)))
+                                                    section.classRestriction.push(parseInt(arr[i].substring(0, 1)))
                                                 } else {
                                                     throw Error('Inconsistent class restriction string part: \'' + arr[i] + '\'')
                                                 }
@@ -212,10 +212,10 @@
                                         }
 
                                         //  Finalize
-                                        result.push(sectionObject)
+                                        result.push(section)
 
                                         order = -1;
-                                        sectionObject = {}
+                                        section = {}
                                     }
 
                                     order++;
