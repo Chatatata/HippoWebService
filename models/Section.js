@@ -36,7 +36,7 @@
     var mongoose = require('mongoose')
     var Schema = mongoose.Schema
 
-    var courseCodes = require('../static-content/courseCodes.json')
+    var courseCodes = require('../static-content/CourseCodes.json')
 
     var sectionSchema = new Schema({
         crn: String,

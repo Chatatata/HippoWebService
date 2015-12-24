@@ -117,18 +117,11 @@
 
         async.each(courseCodes, function (string, callback) {
             ScheduleParser(string, function (err, sections) {
-                sections.forEach(function (element) {
-                    sections.push(element)
-                })
-
-                callback()
+                if (err) callback(err)
+                else if (!sections.length) callback(null)
+                else Section.collection.insert(sections, callback)
             })
-        }, function (err) {
-            if (err) callback(err)
-            else {
-                Section.collection.insert(sections, callback)
-            }
-        })
+        }, callback)
     }
 
     //

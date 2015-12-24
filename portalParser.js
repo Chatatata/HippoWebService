@@ -41,7 +41,7 @@
 
     var User                    = require('./models/User')
 
-    var headers = require('./static-content/portalParserHeaders.json')
+    var headers = require('./static-content/PortalParserHeaders.json')
 
     function fetch(credentials, finalCallback) {
         var responses = []

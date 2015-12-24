@@ -107,7 +107,7 @@
                         trimmedString = trimmedString.join('')
 
                         var result = []
-                        var sectionObject = new Section()
+                        var sectionObject = {}
 
                         var counter = 0
                         var order = 0

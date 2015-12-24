@@ -33,8 +33,8 @@
 (function () {
     'use strict'
 
-    var packageInfo     = require('./package.json')         //  Package file
-    var config          = require('./config.json')          //  Config file
+    var packageInfo     = require('./package')         //  Package file
+    var config          = require('./config')          //  Config file
 
     console.log('hippohttpd (v. ' + packageInfo.version + ')\nType \'?\' to see help, \'.exit\' to exit.\n')
 
@@ -85,14 +85,14 @@
                     case 'schedule.renewOne':
                         FetchManager.renewOne(argv[1], function (err, result) {
                             if (err) console.error(err)
-                            else console.log(result)
+                            else Util.log('Successfully renewed "' + argv[1] + '".')
                         })
                         break
 
                     case 'schedule.renewAll':
-                        FetchManager.renewAll(function (err, result) {
+                        FetchManager.renewAll(function (err) {
                             if (err) console.error(err)
-                            else console.log(result)
+                            else Util.log('Successfully renewed all.')
                         })
                         break
 
