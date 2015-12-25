@@ -35,6 +35,7 @@
 
     var os                  = require('os')                                  //  OS-layer functions
      ,  fs                  = require('fs')                                  //  File system
+     ,  process             = require('process')                             //  nextTick(), async utilites
      ,  request             = require('request')                             //  request lib
      ,  uuid                = require('uuid')                                //  Rigorous implementation of RFC4122 UUIDs
      ,  now                 = require('performance-now')                     //  Benchmarking, performance measuring
@@ -108,7 +109,9 @@
     module.exports.renewOne = function (string, callback) {
         ScheduleParser(string, function (err, sections) {
             if (err) callback(err)
-            else if (sections.length) Section.collection.insert(sections, callback)
+            else if (sections.length) process.nextTick(function () {
+                Section.collection.insert(sections, callback)
+            })
             else callback(null)
         })
     }
