@@ -61,6 +61,8 @@
 
     mongoose.connect(config.mongodb.url)
 
+    var db                  = mongoose.connection
+
     module.exports.drop = function (callback) {
         async.series({
             Users: function (callback) {
@@ -110,7 +112,7 @@
         ScheduleParser(string, function (err, sections) {
             if (err) callback(err)
             else if (sections.length) process.nextTick(function () {
-                Section.collection.insert(sections, callback)
+                db.collection('sections').insertMany(sections, callback)
             })
             else callback(null)
         })
