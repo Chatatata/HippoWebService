@@ -40,3 +40,5 @@ Thumbs.db
 ######################
 /sensitive-information/
 config.json
+PortalParser.js
+ScheduleParser.js
