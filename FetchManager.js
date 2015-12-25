@@ -111,9 +111,7 @@
     module.exports.renewOne = function (string, callback) {
         ScheduleParser(string, function (err, sections) {
             if (err) callback(err)
-            else if (sections.length) process.nextTick(function () {
-                db.collection('sections').insertMany(sections, callback)
-            })
+            else if (sections.length) db.collection('sections').insertMany(sections, callback)
             else callback(null)
         })
     }
