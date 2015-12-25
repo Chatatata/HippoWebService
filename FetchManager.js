@@ -60,7 +60,7 @@
 
     mongoose.connect(config.mongodb.url)
 
-    module.exports.deleteAll = function (callback) {
+    module.exports.drop = function (callback) {
         async.series({
             Users: function (callback) {
                 User.remove({}, callback)
@@ -108,20 +108,13 @@
     module.exports.renewOne = function (string, callback) {
         ScheduleParser(string, function (err, sections) {
             if (err) callback(err)
-            else Section.collection.insert(sections, callback)
+            else if (sections.length) Section.collection.insert(sections, callback)
+            else callback(null)
         })
     }
 
-    module.exports.renewAll = function (string, callback) {
-        var sections = {}
-
-        async.each(courseCodes, function (string, callback) {
-            ScheduleParser(string, function (err, sections) {
-                if (err) callback(err)
-                else if (!sections.length) callback(null)
-                else Section.collection.insert(sections, callback)
-            })
-        }, callback)
+    module.exports.renewAll = function (callback) {
+        async.each(courseCodes, module.exports.renewOne, callback)
     }
 
     //

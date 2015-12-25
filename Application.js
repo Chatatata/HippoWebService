@@ -68,8 +68,8 @@
                 argv.forEach(function (element) { element.trim() })
 
                 switch (argv[0]) {
-                    case 'db.deleteAll':
-                        FetchManager.deleteAll(function (err) {
+                    case 'db.drop':
+                        FetchManager.drop(function (err) {
                             if (err) console.error(err)
                             else Util.log('Successfully destroyed.')
                         })
@@ -78,7 +78,7 @@
                     case 'db.list':
                         FetchManager.countCollections(function (err, results) {
                             if (err) console.error(err)
-                            else console.log(results)
+                            else Util.log(JSON.stringify(results))
                         })
                         break
 
