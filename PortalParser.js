@@ -29,6 +29,8 @@
 //    PortalParser.js
 //
 //    @description: ITU/Ninova portal parser
+//                  anno - Announcement
+//
 
 (function() {
     'use strict'
@@ -38,61 +40,66 @@
     var DomParser               = require('dom-parser')
     var async                   = require('async')
     var htmlparser              = require('htmlparser2')
+    var cheerio                 = require('cheerio')
+    var Iconv                   = require('iconv').Iconv
 
     var User                    = require('./models/User')
+     ,  Section                 = require('./models/Section')
+     ,  Announcement            = require('./models/Announcement')
+     ,  Assignment              = require('./models/Assignment')
 
     var headers = require('./static-content/PortalParserHeaders.json')
 
-    function fetch(credentials, finalCallback) {
+    function fetchSIS(user, callback) {
         var responses = []
 
-        var cookieJar = request.jar()
+        user.jars.sisJar = request.jar()
 
-        var userRawData = { credentials: credentials }
+        var userRawData = {}
 
         async.waterfall([
             function (callback) {
                 var options = {
                     method: 'GET',
                     url: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/twbkwbis.P_WWWLogin',
-                    headers: headers[0],
+                    headers: headers.sis[0],
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
                 responses.push(response)
 
-                if (response.statusCode != 302) finalCallback(Error('Could not reproduce connection sequence.'))
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
 
                 var options = {
                     method: 'GET',
                     url: response.headers.location,
-                    headers: headers[1],
+                    headers: headers.sis[1],
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
                 responses.push(response)
 
-                if (response.statusCode != 302) finalCallback(Error('Could not reproduce connection sequence.'))
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
 
                 var options = {
                     method: 'GET',
                     url: 'https://giris.itu.edu.tr' + response.headers.location,
-                    headers: headers[2],
+                    headers: headers.sis[2],
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
                 responses.push(response)
 
-                if (response.statusCode != 200) finalCallback(Error('Could not reproduce connection sequence.'))
+                if (response.statusCode != 200) return callback(Error('Could not reproduce connection sequence.'))
 
                 //  Get current .NET viewstate
                 var parser = new DomParser()
@@ -102,16 +109,16 @@
                 var options = {
                     method: 'POST',
                     url: 'https://giris.itu.edu.tr' + responses[1].headers.location,
-                    headers: headers[3],
+                    headers: headers.sis[3],
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                     form: {
                         __EVENTTARGET: '',
                         __EVENTARGUMENT: '',
                         __VIEWSTATE: dom.getElementById('__VIEWSTATE').attributes[3].value,
                         __VIEWSTATEGENERATOR: 'C2EE9ABB',
-                        UsernameTbx: credentials.username,
-                        PasswordTbx: credentials.password,
+                        UsernameTbx: user.account.username,
+                        PasswordTbx: user.account.password,
                         'LoginBtn.x': '79',
                         'LoginBtn.y': '14',
                     },
@@ -121,14 +128,14 @@
             }, function (response, body, callback) {
                 responses.push(response)
 
-                if (response.statusCode != 302) finalCallback(Error('Could not reproduce connection sequence.'))
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
 
                 var options = {
                     method: 'GET',
                     url: 'https://giris.itu.edu.tr' + response.headers.location,
-                    headers: headers[4],
+                    headers: headers.sis[4],
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
@@ -136,100 +143,102 @@
                 //  TODO: There should be a check regarding temporary popups.
                 responses.push(response)
 
-                if (response.statusCode != 302) finalCallback(Error('Could not reproduce connection sequence.'))
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
 
                 var options = {
                     method: 'GET',
                     url: 'https://giris.itu.edu.tr' + response.headers.location,
-                    headers: headers[5],
+                    headers: headers.sis[5],
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
                 responses.push(response)
 
-                if (response.statusCode != 302) finalCallback(Error('Could not reproduce connection sequence.'))
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
 
                 var options = {
                     method: 'GET',
                     url: response.headers.location,
-                    headers: headers[6],
+                    headers: headers.sis[6],
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
                 responses.push(response)
 
-                if (response.statusCode != 302) finalCallback(Error('Could not reproduce connection sequence.'))
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
 
                 var options = {
                     method: 'GET',
                     url: response.headers.location,
-                    headers: headers[7],
+                    headers: headers.sis[7],
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
                 responses.push(response)
 
-                if (response.statusCode != 200) finalCallback(Error('Could not reproduce connection sequence.'))
+                if (response.statusCode != 200) return callback(Error('Could not reproduce connection sequence.'))
 
-                credentials.sid = body.substr(body.search('<OPTION VALUE="') + '<OPTION VALUE="'.length, 9)
+                user.personal.studentID = body.substr(body.search('<OPTION VALUE="') + '<OPTION VALUE="'.length, 9)
 
-                if (parseInt(credentials.sid)) {
+                if (parseInt(user.personal.studentID)) {
                     var options = {
                         method: 'POST',
                         url: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/twbkwbis.P_ValLogin',
-                        headers: headers[8],
+                        headers: headers.sis[8],
                         followRedirect: false,
-                        jar: cookieJar,
+                        jar: user.jars.sisJar,
                         form: {
-                            sid: credentials.sid,
-                            PIN: credentials.PIN,
+                            sid: user.personal.studentID + '',
+                            PIN: user.account.PIN,
                             SessionId: responses[6].headers.location.substring(responses[6].headers.location.search('SessionId=') + 10, responses[6].headers.location.length + 1),
                         }
                     }
 
                     request(options, callback)
                 } else {
-                    finalCallback(Error('Student ID could not be resolved.'))
+                    callback(Error('Student ID could not be resolved.'))
                 }
             }, function (response, body, callback) {
 
-                if (response.statusCode != 200) finalCallback(Error('Invalid username, password and PIN.'))
+                if (response.statusCode != 200) return callback(Error('Invalid username, password and PIN.'))
 
                 var options = {
                     method: 'GET',
                     url: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/p_transcript_en.p_id_response',
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
-                if (response.statusCode != 200) finalCallback(Error('Could not reach student image'))
+                if (response.statusCode != 200) return callback(Error('Could not reach student image'))
 
                 userRawData.transcript = body
 
+                var sid = user.personal.studentID + ''
+
                 var options = {
                     method: 'GET',
-                    url: 'http://resimler.sis.itu.edu.tr/' + credentials.sid.substr(0, 3) + '/' + credentials.sid.substr(3, 2) + '/' + credentials.sid.substr(5, 4) + '.jpg',
+                    url: 'http://resimler.sis.itu.edu.tr/' + sid.substr(0, 3) + '/' + sid.substr(3, 2) + '/' + sid.substr(5, 4) + '.jpg',
                     headers: {
                         Referer: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/p_transcript_en.p_id_response',
                     },
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
-                if (response.statusCode != 200) finalCallback(Error('Could not reach student image'))
+                if (response.statusCode != 200) return callback(Error('Could not reach student image'))
 
                 userRawData.image = body
 
@@ -240,12 +249,12 @@
                         Referer: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/twbkwbis.P_GenMenu?name=bmenu.P_RegMnu',
                     },
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
-                if (response.statusCode != 200) finalCallback(Error('Could not reach student schedule'))
+                if (response.statusCode != 200) return callback(Error('Could not reach student schedule'))
 
                 userRawData.schedule = body
 
@@ -256,23 +265,21 @@
                         Referer: 'http://ssb.sis.itu.edu.tr:9000/pls/PROD/twbkwbis.P_GenMenu?name=bmenu.P_RegMnu',
                     },
                     followRedirect: false,
-                    jar: cookieJar,
+                    jar: user.jars.sisJar,
                 }
 
                 request(options, callback)
             }, function (response, body, callback) {
-                if (response.statusCode != 200) finalCallback(Error('Could not reach student email'))
+                if (response.statusCode != 200) return callback(Error('Could not reach student email'))
 
                 userRawData.email = body
 
-                finalCallback(null, userRawData)
-            }, 
-        ])
+                callback(null, userRawData)
+            }
+        ], callback)
     }
 
-    function parse(userRawData, callback) {
-        var user = new User()
-
+    function parseSIS(user, userRawData, callback) {
         async.parallel({
             transcript: function (callback) {
                 userRawData.transcript = userRawData.transcript.substring(userRawData.transcript.indexOf('<FONT FACE'), userRawData.transcript.length)
@@ -362,7 +369,7 @@
                                                     if (text.split('')[text.length - 1] !== '*') {
                                                         grade.value = text
                                                         grade.passed = !(grade.value === 'VF' || grade.value === 'FF')
-                                                        user.marks.push(grade)
+                                                        user.academic.marks.push(grade)
                                                     }
 
                                                     grade = {}
@@ -382,7 +389,7 @@
                                         if (state != -1) {
                                             switch (state) {
                                                 case 0:
-                                                    user.currentCourses.push(text)
+                                                    user.academic.current.push(text)
                                                     state = 1
                                                     break
                                                 case 1:
@@ -410,13 +417,6 @@
             schedule: function (callback) {
                 callback(null)
             },
-            account: function (callback) {
-                user.account.username = userRawData.credentials.username
-                user.account.password = userRawData.credentials.password
-                user.account.PIN = userRawData.credentials.PIN
-
-                callback(null)
-            },
             email: function (callback) {
                 userRawData.email = userRawData.email.substring(userRawData.email.indexOf('<TD COLSPAN="2" CLASS="dddefault">') + '<TD COLSPAN="2" CLASS="dddefault">'.length, userRawData.email.length)
                 user.personal.email = userRawData.email.substring(0, userRawData.email.indexOf('\n</TD>'))
@@ -424,16 +424,292 @@
 
                 callback(null)
             }
-        }, function (err) {
-            callback (err, !err ? user:null)
+        }, callback)
+    }
+
+    function fetchNinova(user, callback) {
+        var responses = []
+
+        user.jars.ninovaJar = request.jar()
+
+        var userRawData = {}
+
+        async.waterfall([
+            function (callback) {
+                var options = {
+                    method: 'GET',
+                    url: 'http://ninova.itu.edu.tr/Login.aspx?ReturnUrl=/kampus',
+                    headers: headers.ninova[0],
+                    followRedirect: false,
+                    jar: user.jars.ninovaJar,
+                }
+
+                request(options, callback)
+            }, function (response, body, callback) {
+                responses.push(response)
+
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
+
+                var options = {
+                    method: 'GET',
+                    url: response.headers.location,
+                    headers: headers.ninova[1],
+                    followRedirect: false,
+                    jar: user.jars.ninovaJar,
+                }
+
+                request(options, callback)
+            }, function (response, body, callback) {
+                responses.push(response)
+
+                if (response.statusCode != 200) return callback(Error('Could not reproduce connection sequence.'))
+
+                headers.sis[2].Referer = responses[0].headers.location
+
+                var viewState = body.substring(body.indexOf('name="__VIEWSTATE" id="__VIEWSTATE" value="') + 'name="__VIEWSTATE" id="__VIEWSTATE" value="'.length, body.length)
+                viewState = viewState.substring(0, viewState.indexOf('" />'))
+
+                var eventValidation = body.substring(body.indexOf('name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="') + 'name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="'.length, body.length)
+                eventValidation = eventValidation.substring(0, eventValidation.indexOf('" />'))
+
+                var options = {
+                    method: 'POST',
+                    url: responses[0].headers.location,
+                    headers: headers.ninova[2],
+                    followRedirect: false,
+                    jar: user.jars.ninovaJar,
+                    form: {
+                        "__VIEWSTATE": viewState,
+                        "__VIEWSTATEGENERATOR": "C2EE9ABB",
+                        "__EVENTVALIDATION": eventValidation,
+                        "ctl00$ContentPlaceHolder1$tbUserName": user.account.username,
+                        "ctl00$ContentPlaceHolder1$tbPassword":	user.account.password,
+                        "ctl00$ContentPlaceHolder1$btnLogin": "Giriş",
+                    }
+                }
+
+                request(options, callback)
+            }, function (response, body, callback) {
+                responses.push(response)
+
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
+
+                var options = {
+                    method: 'GET',
+                    url: response.headers.location,
+                    headers: headers.ninova[3],
+                    followRedirect: false,
+                    jar: user.jars.ninovaJar,
+                }
+
+                request(options, callback)
+            }, function (response, body, callback) {
+                responses.push(response)
+
+                if (response.statusCode != 302) return callback(Error('Could not reproduce connection sequence.'))
+
+                var options = {
+                    method: 'GET',
+                    url: "http://ninova.itu.edu.tr/Kampus1",
+                    headers: headers.ninova[4],
+                    followRedirect: false,
+                    jar: user.jars.ninovaJar,
+                }
+
+                request(options, callback)
+            }, function (response, body, callback) {
+                responses.push(response)
+
+                if (response.statusCode != 200) return callback(Error('Could not reproduce connection sequence.'))
+
+                var options = {
+                    method: 'GET',
+                    url: "http://ninova.itu.edu.tr/members/ogrenci.duyurular.aspx?1/Duyurular",
+                    headers: headers.ninova[4],
+                    followRedirect: false,
+                    jar: user.jars.ninovaJar,
+                }
+
+                request(options, callback)
+            }, function (response, body, callback) {
+                responses.push(response)
+
+                if (response.statusCode != 200) return callback(Error('Could not reproduce connection sequence.'))
+
+                userRawData.announcements = body
+
+                var subHeader = headers.ninova[4]
+                subHeader.Referer = "http://ninova.itu.edu.tr/members/ogrenci.duyurular.aspx?1/Duyurular"
+
+                var options = {
+                    method: 'GET',
+                    url: "http://ninova.itu.edu.tr/Kampus?1/Odevler",
+                    headers: subHeader,
+                    followRedirect: false,
+                    jar: user.jars.ninovaJar,
+                }
+
+                request(options, callback)
+            }, function (response, body, callback) {
+                responses.push(response)
+
+                if (response.statusCode != 200) return callback(Error('Could not reproduce connection sequence.'))
+
+                userRawData.assignments = body
+
+                callback(null, userRawData)
+            }
+        ], callback)
+    }
+
+    function getAnnouncement(user, smallAnno, callback) {
+        var subHeader = headers.ninova[4]
+        subHeader.Referer = "http://ninova.itu.edu.tr/Kampus?1/Duyurular"
+
+        var options = {
+            method: 'GET',
+            url: "http://ninova.itu.edu.tr" + smallAnno.href,
+            headers: subHeader,
+            followRedirect: false,
+            jar: user.jars.ninovaJar,
+        }
+
+        request(options, function (err, response, body) {
+            if (err) callback(err)
+            else if (response.statusCode != 200) return callback(Error('Could not reproduce connection sequence.'))
+            else {
+                var $ = cheerio.load(body, { normalizeWhitespace: true })
+
+                smallAnno.body = $('.duyuruGoruntule div.icerik').text().trim()
+                callback(null, smallAnno)
+            }
         })
     }
 
-    module.exports = function (credentials, callback) {
-        fetch(credentials, function (err, rawData) {
-            parse(rawData, callback)
+    function getAssignment(user, smallAss, callback) {
+        var subHeader = headers.ninova[4]
+        subHeader.Referer = "http://ninova.itu.edu.tr/Kampus?1/Duyurular"
+
+        var options = {
+            method: 'GET',
+            url: "http://ninova.itu.edu.tr" + smallAss.href,
+            headers: subHeader,
+            followRedirect: false,
+            jar: user.jars.ninovaJar,
+        }
+
+        request(options, function (err, response, body) {
+            if (err) callback(err)
+            else if (response.statusCode != 200) return callback(Error('Could not reproduce connection sequence.'))
+            else {
+                var $ = cheerio.load(body, { normalizeWhitespace: true })
+
+                smallAss.body = $('span.data_field').text().trim()
+
+                callback(null, smallAss)
+            }
         })
     }
+
+    function parseNinova(user, userRawData, callback) {
+        async.parallel({
+            announcements: function (callback) {
+                var $ = cheerio.load(userRawData.announcements, { normalizeWhitespace: true })
+
+                var smallAnnos = []
+
+                $('.duyuruGoruntule').each(function () {
+                    var href = $(this).find('a').attr('href')
+
+                    var announcement = new Announcement({
+                        href: href,
+                        _ndid: parseInt(href.substring(href.lastIndexOf('/') + 1)),
+                        title: $(this).find('a').first().text(),
+                        course: Section.parseIdentifier($(this).find('strong').text().substring(0, 8)),
+                        date: $(this).find('span.tarih').first().text(),
+                        author: $(this).find('div.tarih').text().trim()
+                    })
+
+                    smallAnnos.push(announcement)
+                })
+
+                async.map(smallAnnos, function (smallAnno, callback) { getAnnouncement(user, smallAnno, callback) }, function (err, results) {
+                    console.log('announcements: ' + results)
+                    if (err) callback(err)
+                    else {
+                        user.portal.announcements = results
+
+                        callback(null)
+                    }
+                })
+            },
+            assignments: function (callback) {
+                var $ = cheerio.load(userRawData.assignments, { normalizeWhitespace: true })
+
+                var smallAsss = []
+
+                $('#ctl00_ContentPlaceHolder1_gvOdevListesi td').each(function (index, element) {
+                    var href = $(this).find('a').attr('href')
+
+                    if (href) {
+                        var assignment = new Assignment({
+                            href: href,
+                            _ndid: parseInt(href.substring(href.lastIndexOf('/') + 1)),
+                            title: $(this).find('a').first().text(),
+                            course: Section.parseIdentifier($(this).contents().eq(4).text().substr(0, 8)),
+                            posted: $(this).contents().eq(12).text(),
+                            due: $(this).contents().eq(16).text()
+                        })
+
+                        smallAsss.push(assignment)
+                    } else {
+                        //  Break the loop
+
+                        return false
+                    }
+                })
+
+                async.map(smallAsss, function (smallAss, callback) { getAssignment(user, smallAss, callback) }, function (err, results) {
+                    console.log('assignments: ' + results)
+                    if (err) callback(err)
+                    else {
+                        user.portal.assignments = results
+
+                        callback(null)
+                    }
+                })
+            }
+        }, callback)
+    }
+
+    module.exports.fetchUser = function (credentials, callback) {
+        var user = User.raiseFromCredentials(credentials)
+
+        async.parallel([
+            function (callback) {
+                fetchSIS(user, function (err, userRawData) {
+                    parseSIS(user, userRawData, callback)
+                })
+            },
+            function (callback) {
+                fetchNinova(user, function (err, userRawData) {
+                    parseNinova(user, userRawData, callback)
+                })
+            }
+        ], function (err) {
+            if (err) callback(err)
+            else callback(null, user)
+        })
+    }
+
+    console.log(new Date())
+    module.exports.fetchUser(require('./sensitive-information/exampleAcc.json'), function (err, results) {
+        if (err) console.error(err)
+        else {
+            console.log(results)
+            console.log(new Date())
+        }
+    })
 }())
 
 

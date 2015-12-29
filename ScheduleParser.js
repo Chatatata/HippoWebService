@@ -107,7 +107,7 @@
                         trimmedString = trimmedString.join('')
 
                         var result = []
-                        var section = new Section()
+                        var section = {}
 
                         var counter = 0
                         var order = 0
@@ -212,10 +212,10 @@
                                         }
 
                                         //  Finalize
-                                        result.push(section.toObject())
+                                        result.push(section)
 
                                         order = -1;
-                                        section = new Section()
+                                        section = {}
                                     }
 
                                     order++;

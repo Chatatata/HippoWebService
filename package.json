@@ -1,10 +1,10 @@
 {
   "name": "hippo",
-  "version": "1.4.1",
+  "version": "1.6.0",
   "description": "Hippo Web Server",
   "main": "Main.js",
   "scripts": {
-    "test": "node ./test/scheduleParser-fetch -test"
+    "test": "node ./unit-tests/ScheduleParser-Fetch -test"
   },
   "author": "Ekuklu, B (Chatatata)",
   "license": "MIT",

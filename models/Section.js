@@ -38,6 +38,8 @@
 
     var courseCodes = require('../static-content/CourseCodes.json')
 
+    var Announcement = require('./Announcement')
+
     var sectionSchema = new Schema({
         crn: String,
         code: String,
@@ -55,6 +57,7 @@
         majorRestriction: [String],
         prerequisites: String,
         classRestriction: [Number],
+        announcements: [Announcement]
     })
 
     sectionSchema.statics.isValidCode = function (string) {
@@ -64,9 +67,9 @@
     sectionSchema.statics.parseIdentifier = function (string) {
         var courseObject = {}
 
-        courseObject.code = text.substring(0, 3)
-        courseObject.number = parseInt(text.substring(4, 7))
-        courseObject.isEnglish = text.charAt(7) == 'E'
+        courseObject.code = string.substring(0, 3)
+        courseObject.number = parseInt(string.substring(4, 7))
+        courseObject.isEnglish = string.charAt(7) == 'E'
 
         return courseObject
     }

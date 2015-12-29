@@ -50,8 +50,6 @@
     var FetchManager    = require('./FetchManager')
 
     module.exports = function () {
-//        if (!argv.test) FetchManager.init(config.mongodb.url)
-
         require('./RouteController').start(config.hapi.port)               //  Main routes controller
 
         var readline = require('readline')
@@ -71,7 +69,14 @@
                     case 'db.drop':
                         FetchManager.drop(function (err) {
                             if (err) console.error(err)
-                            else Util.log('Successfully destroyed.')
+                            else {
+                                Util.log('Successfully destroyed.')
+
+                                FetchManager.countCollections(function (err, results) {
+                                    if (err) console.error(err)
+                                    else Util.log(JSON.stringify(results))
+                                })
+                            }
                         })
                         break
 
@@ -79,6 +84,19 @@
                         FetchManager.countCollections(function (err, results) {
                             if (err) console.error(err)
                             else Util.log(JSON.stringify(results))
+                        })
+                        break
+
+                    case 'schedule.drop':
+                        Section.remove({}, function (err) {
+                            if (err) console.error(err)
+                            else {
+                                Util.log('Successfully dropped schedule.')
+                                Section.count({}, function (err, results) {
+                                    if (err) console.error(err)
+                                    else Util.log(results)
+                                })
+                            }
                         })
                         break
 
@@ -131,11 +149,19 @@
 
                     case 'user.get':
                         if (argv.length == 2) {
-                            Users.find({ id: argv[1] }).exec(function (err, user) {
+                            User.find({ id: argv[1] }).exec(function (err, user) {
                                 if (err) console.error(err)
-                                else console.log(user)
+                                else Util.log(user)
                             })
                         }
+                        break
+
+                    case 'user.drop':
+                        User.remove({}, function (err) {
+                            if (err) console.error(err)
+                            else Util.log('Successfully dropped user database.')
+                        })
+                        break
 
                     case 'test.fetch':
                         FetchManager.test.fetch(function (err, result, time) {

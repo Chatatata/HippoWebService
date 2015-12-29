@@ -36,6 +36,9 @@
     var mongoose = require('mongoose')
     var Schema = mongoose.Schema
 
+    var Announcement = require('./Announcement')
+     ,  Assignment   = require('./Assignment')
+
     var userSchema = new Schema({
         account: {
             username: String,
@@ -46,6 +49,10 @@
         activation: {
             code: String,
             done: Boolean,
+        },
+        jars: {
+            sisJar: Schema.Types.Mixed,
+            ninovaJar: Schema.Types.Mixed
         },
         personal: {
             name: String,
@@ -69,7 +76,21 @@
             }],
             current: [String],
         },
+        portal: {
+            announcements: [Announcement],
+            assignments: [Assignment]
+        }
     })
+
+    userSchema.statics.raiseFromCredentials = function(credentials) {
+        return new module.exports({
+            account: {
+                username: credentials.username,
+                password: credentials.password,
+                PIN: credentials.PIN
+            }
+        })
+    }
 
     userSchema.methods.fullName = function() {
         return this.personal.name + " " + this.personal.surname

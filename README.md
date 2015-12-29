@@ -16,7 +16,7 @@ Hippo Web Service is the back-end support service for Hippo.
   - Some primitive benchmarking utilities in order to test the environment.
 
 ### Version
-1.4.0 (nightly build)
+1.6.0 (nightly build)
 
 ### Stack
 
@@ -26,6 +26,7 @@ Hippo uses following packages or applications, currently:
 * [hapi.js] - fast node.js network app framework
 * [async] - asynchronous control-flow library
 * [mongoose] - elegant mongodb object modeling for node.js
+* [cheerio] - fast, flexible, and lean implementation of core jQuery designed specifically for the server.
 
 > I personally do not believe that promise implementations (i.e. Promises/A+, kriskowal's Q, bluebird etc.) are mature enough to be played with, I chose to write the code with callbacks.
 
@@ -35,7 +36,7 @@ Just copy the entire repository, and run it with instructions supplied at the bo
 
 ### Development
 
-Hippo app uses Node.js v5.1.0 (stable) as platform. Hippo app currently has no issues with [nvm].
+Hippo app uses Node.js v5.3.0 (stable) as platform. Hippo app currently has no issues with [nvm].
 
 Run the app with (assuming you have a MongoDB server):
 ```sh
@@ -70,4 +71,4 @@ MIT
    [our Trello board]: <https://trello.com/b/vgwiOvFh>
    [gitter chat]: <https://gitter.im/Chatatata/HippoWebService?utm_source=share-link&utm_medium=link&utm_campaign=share-link>
    [mongoose]: <http://mongoosejs.com>
- 
+   [cheerio]: <https://github.com/cheeriojs/cheerio>
